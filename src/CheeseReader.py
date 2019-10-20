@@ -1,4 +1,3 @@
-from os import system, name
 from CheeseMenu import CheeseMenu
 from CheeseModel import CheeseModel
 from CheeseDataLoader import CheeseDataLoader
@@ -22,73 +21,63 @@ cheeseDAO = CheeseDAO()
 # look cleaner. I made poxis explicit in case you're on
 # a different OS. The program still works just looks worse.
 # define our clear function 
-def clear():
-  # for windows 
-  if name == 'nt': 
-      _ = system('cls') 
-  # for mac and linux(here, os.name is 'posix') 
-  elif name == 'posix': 
-      _ = system('clear')
 
 def saveCheeseFile():
-  clear()
-  dataLoader.saveCheeseData(input("File name:"))
+  menu.clear()
+  dataLoader.saveCheeseData(menu.accept("File name:"))
   exit
 
 def displayCheeses():
-  clear()
-  for cheese in cheeseDAO.getCheeses():
-    print(cheese)
-  menu.enterToContinue()
+  menu.showCheeseList(cheeseDAO.getCheeses())
 
 def createNewCheese():
-  clear()
+  menu.clear()
   menu.display("Nicholas Bright")
   newCheese = CheeseModel()
   newCheese.CheeseNameEN = menu.accept("CheeseNameEN:")
-  newCheese.CheeseNameFR = input("CheeseNameFR:")
-  newCheese.ManufacturerNameEN = input("ManufacturerNameEN:")
-  newCheese.ManufacturerNameFR = input("ManufacturerNameFR:")
-  newCheese.ManufacturerProvCode = input("ManufacturerProvCode:")
-  newCheese.ManufacturingTypeEN = input("ManufacturingTypeEN:")
-  newCheese.ManufacturingTypeFR = input("ManufacturingTypeFR:")
-  newCheese.WebSiteEN = input("WebSiteEN:")
-  newCheese.WebSiteFR = input("WebSiteFR:")
-  newCheese.FatContentPercent = input("FatContentPercent:")
-  newCheese.MoisturePercent = input("MoisturePercent:")
-  newCheese.ParticularitiesEN = input("ParticularitiesEN:")
-  newCheese.ParticularitiesFR = input("ParticularitiesFR:")
-  newCheese.FlavourEN = input("FlavourEN:")
-  newCheese.FlavourFR = input("FlavourFR:")
-  newCheese.CharacteristicsEN = input("CharacteristicsEN:")
-  newCheese.CharacteristicsFR = input("CharacteristicsFR:")
-  newCheese.RipeningEN = input("RipeningEN:")
-  newCheese.RipeningFR = input("RipeningFR:")
-  newCheese.Organic = input("Organic:")
-  newCheese.CategoryTypeEN = input("CategoryTypeEN:")
-  newCheese.CategoryTypeFR = input("CategoryTypeFR:")
-  newCheese.MilkTypeEN = input("MilkTypeEN:")
-  newCheese.MilkTypeFR = input("MilkTypeFR:")
-  newCheese.MilkTreatmentTypeEN = input("MilkTreatmentTypeEN:")
-  newCheese.MilkTreatmentTypeFR = input("MilkTreatmentTypeFR:")
-  newCheese.RindTypeEN = input("RindTypeEN:")
-  newCheese.RindTypeFR = input("RindTypeFR:")
-  newCheese.LastUpdateDate = input("LastUpdateDate:")
+  newCheese.CheeseNameFR = menu.accept("CheeseNameFR:")
+  newCheese.ManufacturerNameEN = menu.accept("ManufacturerNameEN:")
+  newCheese.ManufacturerNameFR = menu.accept("ManufacturerNameFR:")
+  newCheese.ManufacturerProvCode = menu.accept("ManufacturerProvCode:")
+  newCheese.ManufacturingTypeEN = menu.accept("ManufacturingTypeEN:")
+  newCheese.ManufacturingTypeFR = menu.accept("ManufacturingTypeFR:")
+  newCheese.WebSiteEN = menu.accept("WebSiteEN:")
+  newCheese.WebSiteFR = menu.accept("WebSiteFR:")
+  newCheese.FatContentPercent = menu.accept("FatContentPercent:")
+  newCheese.MoisturePercent = menu.accept("MoisturePercent:")
+  newCheese.ParticularitiesEN = menu.accept("ParticularitiesEN:")
+  newCheese.ParticularitiesFR = menu.accept("ParticularitiesFR:")
+  newCheese.FlavourEN = menu.accept("FlavourEN:")
+  newCheese.FlavourFR = menu.accept("FlavourFR:")
+  newCheese.CharacteristicsEN = menu.accept("CharacteristicsEN:")
+  newCheese.CharacteristicsFR = menu.accept("CharacteristicsFR:")
+  newCheese.RipeningEN = menu.accept("RipeningEN:")
+  newCheese.RipeningFR = menu.accept("RipeningFR:")
+  newCheese.Organic = menu.accept("Organic:")
+  newCheese.CategoryTypeEN = menu.accept("CategoryTypeEN:")
+  newCheese.CategoryTypeFR = menu.accept("CategoryTypeFR:")
+  newCheese.MilkTypeEN = menu.accept("MilkTypeEN:")
+  newCheese.MilkTypeFR = menu.accept("MilkTypeFR:")
+  newCheese.MilkTreatmentTypeEN = menu.accept("MilkTreatmentTypeEN:")
+  newCheese.MilkTreatmentTypeFR = menu.accept("MilkTreatmentTypeFR:")
+  newCheese.RindTypeEN = menu.accept("RindTypeEN:")
+  newCheese.RindTypeFR = menu.accept("RindTypeFR:")
+  newCheese.LastUpdateDate = menu.accept("LastUpdateDate:")
   cheeseDAO.putCheese(newCheese)
 
 def viewCheese():
-  clear()
-  cheeseId = input("ID of the cheese to view:")
+  menu.clear()
+  cheeseId = menu.accept("ID of the cheese to view:")
   cheese = cheeseDAO.find(int(cheeseId))
 
   if cheese == None:
-    print("Cheese with that ID not found.")
+    menu.display("Cheese with that ID not found.")
     menu.enterToContinue()
   else:
     userMessage = ""
     recieved = ""
     while (recieved != "y") & (recieved != "n"):
-      clear()
+      menu.clear()
       menu.display(cheese)
       menu.display(userMessage)
       recieved = menu.accept("Modify this entry?:(y/n):")
@@ -97,12 +86,12 @@ def viewCheese():
       menu.modifyCheeseMenu(cheese)
 
 def removeCheese():
-  clear()
-  cheeseId = input("ID of the cheese to remove:")
+  menu.clear()
+  cheeseId = menu.accept("ID of the cheese to remove:")
   if cheeseDAO.remove(int(cheeseId)):
-    print("Cheese removed")
+    menu.display("Cheese removed")
   else:
-    print("Cheese wtih that ID not found")
+    menu.display("Cheese wtih that ID not found")
   menu.enterToContinue()
 
 menuOptions = [
@@ -120,7 +109,7 @@ menu.setOptions( menuOptions )
 quitFlag = 0
 userMessage = None
 while quitFlag == 0:
-  clear()
+  menu.clear()
   userInput = menu.showMenu(userMessage)
   userMessage = None
   if(userInput == str(menuOptions.index("Reload the dataset")+1)):

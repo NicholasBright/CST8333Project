@@ -1,9 +1,43 @@
+from os import system, name
+from CheeseDAO import CheeseDAO
+import re
+
 class CheeseMenu:
   "A menu for reading cheese data"
+
+  cheeseDAO = CheeseDAO()
 
   def __init__(self):
     self.quitFlag = 0
     self.options = []
+  
+  def clear(self):
+    # for windows 
+    if name == 'nt': 
+        _ = system('cls') 
+    # for mac and linux(here, os.name is 'posix') 
+    elif name == 'posix': 
+        _ = system('clear')
+
+  def showCheeseList(self, cheeseList):
+    cheeseIndex = 0
+    pageCount = 1
+    while(cheeseIndex < len(cheeseList)):
+      self.clear()
+      print("Nicholas Bright")
+      displayCount = 0
+      while(displayCount < 5) & (cheeseIndex < len(cheeseList)):
+        self.displayCheeseSummaryInfo(cheeseList[cheeseIndex])
+        displayCount += 1
+        cheeseIndex += 1
+      print("Page (" + str(pageCount) + "/" + str(int(len(cheeseList)/5)) + ")")
+      pageCount += 1
+      userInput = self.accept("Enter (q) to quit, an ID to view full info, anything else to continue:")
+      if userInput == "q":
+        break
+      elif re.match("\d+",userInput) is not None:
+        self.displayLongformCheese(self.cheeseDAO.find(int(userInput)))
+        cheeseIndex -= 5
 
   def showMenu(self, userMessage = None ):
     print("Nicholas Bright")
@@ -121,3 +155,16 @@ class CheeseMenu:
   
   def enterToContinue(self):
     input("Press enter to continue")
+
+  def displayCheeseSummaryInfo(self, cheese):
+    print(str(cheese.CheeseId) + ": " + 
+      ("Unknown" if cheese.CheeseNameEN == "" else cheese.CheeseNameEN) 
+      + " made by " + 
+      ("Unknown" if cheese.ManufacturerNameEN == "" else cheese.ManufacturerNameEN)
+      + ", Province: " +
+      ("Unknown" if cheese.ManufacturerProvCode == "" else cheese.ManufacturerProvCode))
+
+  def displayLongformCheese(self, cheese):
+    self.clear()
+    self.displayCheeseSummaryInfo(cheese)
+    self.enterToContinue()
