@@ -8,19 +8,15 @@ userInput = None
 view = CheeseView()
 dataLoader = CheeseDataLoader(filename, 200)
 cheeseDAO = CheeseDAO()
-
-#The following method was taken from this source:
-#
-#https://www.geeksforgeeks.org/clear-screen-python/
-#Accessed On: 10/20/2019
-#Author: mohit_negi, link: https://auth.geeksforgeeks.org/user/mohit_negi/articles
-#
-#I used it since it doesn't provide any required functionality
-#The method clears the screen is an OS dependant way
-# which I use because I think it makes the program
-# look cleaner. I made poxis explicit in case you're on
-# a different OS. The program still works just looks worse.
-# define our clear function 
+menuOptions = [
+  "Reload the dataset",
+  "Save data to file",
+  "Display records",
+  "Create new cheese",
+  "Select, Display, or Edit Cheese",
+  "Remove a cheese",
+  "Quit"
+  ]
 
 def saveCheeseFile():
   userInput = ""
@@ -103,24 +99,17 @@ def removeCheese():
     view.display("Cheese wtih that ID not found")
   view.enterToContinue()
 
-menuOptions = [
-  "Reload the dataset",
-  "Save data to file",
-  "Display records",
-  "Create new cheese",
-  "Select, Display, or Edit Cheese",
-  "Remove a cheese",
-  "Quit"
-  ]
-
 view.setOptions( menuOptions )
 
 quitFlag = 0
-userMessage = None
+userMessage = ""
+userInput = ""
 while quitFlag == 0:
   view.clear()
-  userInput = view.showMenu(userMessage)
-  userMessage = None
+  view.showMenu()
+  view.display(userMessage)
+  userMessage = ""
+  userInput = view.accept("Selection: ").lower()
   if(userInput == str(menuOptions.index("Reload the dataset")+1)):
     cheeseDAO.remove("ALL")
     dataLoader.readCheeseData(filename, 200)

@@ -11,7 +11,20 @@ class CheeseView:
   def __init__(self):
     self.quitFlag = 0
     self.options = []
-  
+
+  #The following method was taken from this source:
+  #
+  #https://www.geeksforgeeks.org/clear-screen-python/
+  #Accessed On: 10/20/2019
+  #Author: mohit_negi
+  #Link to profile: https://auth.geeksforgeeks.org/user/mohit_negi/articles
+  #
+  #I used it since it doesn't provide any required functionality
+  #The method clears the screen is an OS dependant way
+  # which I use because I think it makes the program
+  # look cleaner. I made poxis explicit in case you're on
+  # a different OS. The program still works just looks worse.
+  # define our clear function 
   def clear(self):
     # for windows 
     if name == 'nt': 
@@ -53,12 +66,9 @@ class CheeseView:
         if pageCount < 1:
           pageCount = 1
 
-  def showMenu(self, userMessage = None ):
+  def showMenu(self):
     self.displayName()
     self.displayMenuOptions()
-    if userMessage == None:
-      userMessage = ""
-    return input(userMessage.__add__("\n") + "Selection: ")
 
   def displayMenuOptions (self):
     for option in self.options:
