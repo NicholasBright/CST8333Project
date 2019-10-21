@@ -1,8 +1,9 @@
 from os import system, name
 from CheeseDAO import CheeseDAO
+import math
 import re
 
-class CheeseMenu:
+class CheeseView:
   "A menu for reading cheese data"
 
   cheeseDAO = CheeseDAO()
@@ -20,36 +21,48 @@ class CheeseMenu:
         _ = system('clear')
 
   def showCheeseList(self, cheeseList):
-    cheeseIndex = 0
+    userMessage = ""
     pageCount = 1
-    while(cheeseIndex < len(cheeseList)):
+    displayedPerPage = 10
+    while ((pageCount-1) * displayedPerPage) < len(cheeseList):
       self.clear()
-      print("Nicholas Bright")
+      self.displayName()
       displayCount = 0
-      while(displayCount < 5) & (cheeseIndex < len(cheeseList)):
-        self.displayCheeseSummaryInfo(cheeseList[cheeseIndex])
+      while(displayCount < displayedPerPage) & ((pageCount -1)*displayedPerPage + displayCount < len(cheeseList)):
+        self.displayCheeseSummaryInfo(cheeseList[(pageCount -1)*displayedPerPage + displayCount])
         displayCount += 1
-        cheeseIndex += 1
-      print("Page (" + str(pageCount) + "/" + str(int(len(cheeseList)/5)) + ")")
-      pageCount += 1
-      userInput = self.accept("Enter (q) to quit, an ID to view full info, anything else to continue:")
+      self.display("Page (" + str(pageCount) + "/" + str(int(math.ceil(len(cheeseList)/displayedPerPage))) + ")")
+      self.display(userMessage)
+      userInput = self.accept("Input: (Q)uit, (N)ext, (P)rev, or enter ID for details: ")
       if userInput == "q":
         break
       elif re.match("\d+",userInput) is not None:
-        self.displayLongformCheese(self.cheeseDAO.find(int(userInput)))
-        cheeseIndex -= 5
+        cheese = self.cheeseDAO.find(int(userInput))
+        if cheese != None:
+          self.clear()
+          self.displayName()
+          self.displayLongformCheese(cheese)
+          self.enterToContinue()
+        userMessage = "ID not found"
+      elif (userInput == "n") | (userInput == ""):
+        pageCount += 1
+        if pageCount > len(cheeseList):
+          break
+      elif userInput == "p":
+        pageCount -= 1
+        if pageCount < 1:
+          pageCount = 1
 
   def showMenu(self, userMessage = None ):
-    print("Nicholas Bright")
-    self.printMenuOptions()
+    self.displayName()
+    self.displayMenuOptions()
     if userMessage == None:
       userMessage = ""
     return input(userMessage.__add__("\n") + "Selection: ")
 
-  def printMenuOptions (self):
+  def displayMenuOptions (self):
     for option in self.options:
-      print("(", self.options.index(option) + 1, ") - ", option, sep="")
-    exit
+      self.display("(" + str(self.options.index(option) + 1) + ") - " + option)
   
   def getOptions(self):
     return self.options
@@ -64,7 +77,7 @@ class CheeseMenu:
     return input(message)
 
   def modifyCheeseMenu(self, cheese):
-    print("Nicholas Bright")
+    self.displayName()
     userInput = input("CheeseNameEN(" + cheese.CheeseNameEN + ")")
     if userInput != "":
       cheese.CheeseNameEN = userInput
@@ -157,14 +170,30 @@ class CheeseMenu:
     input("Press enter to continue")
 
   def displayCheeseSummaryInfo(self, cheese):
-    print(str(cheese.CheeseId) + ": " + 
+    self.display(str(cheese.CheeseId) + ": " + 
       ("Unknown" if cheese.CheeseNameEN == "" else cheese.CheeseNameEN) 
       + " made by " + 
       ("Unknown" if cheese.ManufacturerNameEN == "" else cheese.ManufacturerNameEN)
       + ", Province: " +
-      ("Unknown" if cheese.ManufacturerProvCode == "" else cheese.ManufacturerProvCode))
+      ("Unknown" if cheese.ManufacturerProvCode == "" else cheese.ManufacturerProvCode)
+      + ", Type: " +
+      ("Unknown" if cheese.ManufacturingTypeEN == "" else cheese.ManufacturingTypeEN))
 
   def displayLongformCheese(self, cheese):
-    self.clear()
     self.displayCheeseSummaryInfo(cheese)
-    self.enterToContinue()
+    self.display("WebSite: " + ("Unknown" if cheese.WebSiteEN == "" else cheese.WebSiteEN))
+    self.display("FatContentPercent: " + ("Unknown" if cheese.FatContentPercent == "" else cheese.FatContentPercent))
+    self.display("MoisturePercent: " + ("Unknown" if cheese.MoisturePercent == "" else cheese.MoisturePercent))
+    self.display("Particularities: " + ("Unknown" if cheese.ParticularitiesEN == "" else cheese.ParticularitiesEN))
+    self.display("Flavour: " + ("Unknown" if cheese.FlavourEN == "" else cheese.FlavourEN))
+    self.display("Characteristics: " + ("Unknown" if cheese.CharacteristicsEN == "" else cheese.CharacteristicsEN))
+    self.display("Ripening: " + ("Unknown" if cheese.RipeningEN == "" else cheese.RipeningEN))
+    self.display("Organic: " + ("Yes" if cheese.Organic == "1" else "No"))
+    self.display("CategoryType: " + ("Unknown" if cheese.CategoryTypeEN == "" else cheese.CategoryTypeEN))
+    self.display("MilkType: " + ("Unknown" if cheese.MilkTypeEN == "" else cheese.MilkTypeEN))
+    self.display("MilkTreatmentType: " + ("Unknown" if cheese.MilkTreatmentTypeEN == "" else cheese.MilkTreatmentTypeEN))
+    self.display("RindType: " + ("Unknown" if cheese.RindTypeEN == "" else cheese.RindTypeEN))
+    self.display("LastUpdateDate: " + ("Unknown" if cheese.LastUpdateDate == "" else cheese.LastUpdateDate))
+  
+  def displayName(self):
+    self.display("Nicholas Bright")

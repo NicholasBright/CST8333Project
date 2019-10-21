@@ -1,11 +1,11 @@
-from CheeseMenu import CheeseMenu
+from CheeseView import CheeseView
 from CheeseModel import CheeseModel
 from CheeseDataLoader import CheeseDataLoader
 from CheeseDAO import CheeseDAO
 
 filename = "canadianCheeseDirectory.csv"
 userInput = None
-menu = CheeseMenu()
+view = CheeseView()
 dataLoader = CheeseDataLoader(filename, 200)
 cheeseDAO = CheeseDAO()
 
@@ -23,76 +23,85 @@ cheeseDAO = CheeseDAO()
 # define our clear function 
 
 def saveCheeseFile():
-  menu.clear()
-  dataLoader.saveCheeseData(menu.accept("File name:"))
-  exit
+  userInput = ""
+  userMessage = ""
+  while (userInput == "") | (userInput == "q"):
+    view.clear()
+    view.displayName()
+    view.display(userMessage)
+    userInput = view.accept("(Q)uit, or enter file name: ")
+    if (userInput != "") & (userInput != "q"):
+      userMessage = "Invalid input"
+
+  if userInput != "q":
+    dataLoader.saveCheeseData(userInput)
 
 def displayCheeses():
-  menu.showCheeseList(cheeseDAO.getCheeses())
+  view.showCheeseList(cheeseDAO.getCheeses())
 
 def createNewCheese():
-  menu.clear()
-  menu.display("Nicholas Bright")
+  view.clear()
+  view.display("Nicholas Bright")
   newCheese = CheeseModel()
-  newCheese.CheeseNameEN = menu.accept("CheeseNameEN:")
-  newCheese.CheeseNameFR = menu.accept("CheeseNameFR:")
-  newCheese.ManufacturerNameEN = menu.accept("ManufacturerNameEN:")
-  newCheese.ManufacturerNameFR = menu.accept("ManufacturerNameFR:")
-  newCheese.ManufacturerProvCode = menu.accept("ManufacturerProvCode:")
-  newCheese.ManufacturingTypeEN = menu.accept("ManufacturingTypeEN:")
-  newCheese.ManufacturingTypeFR = menu.accept("ManufacturingTypeFR:")
-  newCheese.WebSiteEN = menu.accept("WebSiteEN:")
-  newCheese.WebSiteFR = menu.accept("WebSiteFR:")
-  newCheese.FatContentPercent = menu.accept("FatContentPercent:")
-  newCheese.MoisturePercent = menu.accept("MoisturePercent:")
-  newCheese.ParticularitiesEN = menu.accept("ParticularitiesEN:")
-  newCheese.ParticularitiesFR = menu.accept("ParticularitiesFR:")
-  newCheese.FlavourEN = menu.accept("FlavourEN:")
-  newCheese.FlavourFR = menu.accept("FlavourFR:")
-  newCheese.CharacteristicsEN = menu.accept("CharacteristicsEN:")
-  newCheese.CharacteristicsFR = menu.accept("CharacteristicsFR:")
-  newCheese.RipeningEN = menu.accept("RipeningEN:")
-  newCheese.RipeningFR = menu.accept("RipeningFR:")
-  newCheese.Organic = menu.accept("Organic:")
-  newCheese.CategoryTypeEN = menu.accept("CategoryTypeEN:")
-  newCheese.CategoryTypeFR = menu.accept("CategoryTypeFR:")
-  newCheese.MilkTypeEN = menu.accept("MilkTypeEN:")
-  newCheese.MilkTypeFR = menu.accept("MilkTypeFR:")
-  newCheese.MilkTreatmentTypeEN = menu.accept("MilkTreatmentTypeEN:")
-  newCheese.MilkTreatmentTypeFR = menu.accept("MilkTreatmentTypeFR:")
-  newCheese.RindTypeEN = menu.accept("RindTypeEN:")
-  newCheese.RindTypeFR = menu.accept("RindTypeFR:")
-  newCheese.LastUpdateDate = menu.accept("LastUpdateDate:")
+  newCheese.CheeseNameEN = view.accept("CheeseNameEN:")
+  newCheese.CheeseNameFR = view.accept("CheeseNameFR:")
+  newCheese.ManufacturerNameEN = view.accept("ManufacturerNameEN:")
+  newCheese.ManufacturerNameFR = view.accept("ManufacturerNameFR:")
+  newCheese.ManufacturerProvCode = view.accept("ManufacturerProvCode:")
+  newCheese.ManufacturingTypeEN = view.accept("ManufacturingTypeEN:")
+  newCheese.ManufacturingTypeFR = view.accept("ManufacturingTypeFR:")
+  newCheese.WebSiteEN = view.accept("WebSiteEN:")
+  newCheese.WebSiteFR = view.accept("WebSiteFR:")
+  newCheese.FatContentPercent = view.accept("FatContentPercent:")
+  newCheese.MoisturePercent = view.accept("MoisturePercent:")
+  newCheese.ParticularitiesEN = view.accept("ParticularitiesEN:")
+  newCheese.ParticularitiesFR = view.accept("ParticularitiesFR:")
+  newCheese.FlavourEN = view.accept("FlavourEN:")
+  newCheese.FlavourFR = view.accept("FlavourFR:")
+  newCheese.CharacteristicsEN = view.accept("CharacteristicsEN:")
+  newCheese.CharacteristicsFR = view.accept("CharacteristicsFR:")
+  newCheese.RipeningEN = view.accept("RipeningEN:")
+  newCheese.RipeningFR = view.accept("RipeningFR:")
+  newCheese.Organic = view.accept("Organic:")
+  newCheese.CategoryTypeEN = view.accept("CategoryTypeEN:")
+  newCheese.CategoryTypeFR = view.accept("CategoryTypeFR:")
+  newCheese.MilkTypeEN = view.accept("MilkTypeEN:")
+  newCheese.MilkTypeFR = view.accept("MilkTypeFR:")
+  newCheese.MilkTreatmentTypeEN = view.accept("MilkTreatmentTypeEN:")
+  newCheese.MilkTreatmentTypeFR = view.accept("MilkTreatmentTypeFR:")
+  newCheese.RindTypeEN = view.accept("RindTypeEN:")
+  newCheese.RindTypeFR = view.accept("RindTypeFR:")
+  newCheese.LastUpdateDate = view.accept("LastUpdateDate:")
   cheeseDAO.putCheese(newCheese)
 
 def viewCheese():
-  menu.clear()
-  cheeseId = menu.accept("ID of the cheese to view:")
+  view.clear()
+  cheeseId = view.accept("ID of the cheese to view:")
   cheese = cheeseDAO.find(int(cheeseId))
 
   if cheese == None:
-    menu.display("Cheese with that ID not found.")
-    menu.enterToContinue()
+    view.display("Cheese with that ID not found.")
+    view.enterToContinue()
   else:
     userMessage = ""
     recieved = ""
     while (recieved != "y") & (recieved != "n"):
-      menu.clear()
-      menu.display(cheese)
-      menu.display(userMessage)
-      recieved = menu.accept("Modify this entry?:(y/n):")
+      view.clear()
+      view.displayLongformCheese(cheese)
+      view.display(userMessage)
+      recieved = view.accept("Modify this entry?:(y/n):")
       userMessage = "Invalid input"
     if recieved == "y":
-      menu.modifyCheeseMenu(cheese)
+      view.modifyCheeseMenu(cheese)
 
 def removeCheese():
-  menu.clear()
-  cheeseId = menu.accept("ID of the cheese to remove:")
+  view.clear()
+  cheeseId = view.accept("ID of the cheese to remove:")
   if cheeseDAO.remove(int(cheeseId)):
-    menu.display("Cheese removed")
+    view.display("Cheese removed")
   else:
-    menu.display("Cheese wtih that ID not found")
-  menu.enterToContinue()
+    view.display("Cheese wtih that ID not found")
+  view.enterToContinue()
 
 menuOptions = [
   "Reload the dataset",
@@ -104,13 +113,13 @@ menuOptions = [
   "Quit"
   ]
 
-menu.setOptions( menuOptions )
+view.setOptions( menuOptions )
 
 quitFlag = 0
 userMessage = None
 while quitFlag == 0:
-  menu.clear()
-  userInput = menu.showMenu(userMessage)
+  view.clear()
+  userInput = view.showMenu(userMessage)
   userMessage = None
   if(userInput == str(menuOptions.index("Reload the dataset")+1)):
     cheeseDAO.remove("ALL")
