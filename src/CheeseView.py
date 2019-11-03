@@ -46,10 +46,10 @@ class CheeseView:
         displayCount += 1
       self.display("Page (" + str(pageCount) + "/" + str(int(math.ceil(len(cheeseList)/displayedPerPage))) + ")")
       self.display(userMessage)
-      userInput = self.accept("Input: (Q)uit, (N)ext, (P)rev, or enter ID for details: ")
+      userInput = self.accept("Input: (Q)uit, (N)ext, (P)rev, or enter ID for details:(N) ")
       if userInput == "q":
         break
-      elif re.match("\d+",userInput) is not None:
+      elif re.match("\\d+",userInput) is not None:
         cheese = self.cheeseDAO.find(int(userInput))
         if cheese != None:
           self.clear()
