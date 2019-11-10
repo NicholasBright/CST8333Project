@@ -5,7 +5,7 @@ import sys
 
 class CheeseDataLoader:
   "Object that loads cheese data from a file"
-
+  
   def __init__(self, filename = None, linesToRead = 0):
     self.headers = []
     if(filename != None):
@@ -32,10 +32,13 @@ class CheeseDataLoader:
     #Reading in the number of lines specified by 
     # linesToRead and creating an object for each
     for cheeseDataLine in cheeseFile:
-      cheeseDAO.putCheese(self.readCheeseDataLine(cheeseDataLine.replace("\n","")))
+      cheese = self.readCheeseDataLine(cheeseDataLine.replace("\n",""))
+      cheeseDAO.putCheese(cheese)
+      cheeseDAO.insertCheese(cheese)
       recordsRead += 1
       if recordsRead >= linesToRead:
         break
+    input(cheeseDAO.getCheeses().__len__())
     return cheeseDAO
 
   def readCheeseDataLine ( self, cheeseData ):
@@ -45,7 +48,7 @@ class CheeseDataLoader:
     while fieldIndex < len(fields):
       if fields[fieldIndex].startswith("\""):
         newField = fields[fieldIndex]
-        while(not newField.endswith("\"")):
+        while(newField.count("\"") % 2 == 1):
           newField += ","
           newField = newField.__add__(fields[fieldIndex + 1])
           fields.remove(fields[fieldIndex + 1])
@@ -63,7 +66,9 @@ class CheeseDataLoader:
     newCheese.WebSiteEN = fields[self.headers.index("WebSiteEn")]
     newCheese.WebSiteFR = fields[self.headers.index("WebSiteFr")]
     newCheese.FatContentPercent = fields[self.headers.index("FatContentPercent")]
+    if newCheese.FatContentPercent == "":  newCheese.FatContentPercent = None
     newCheese.MoisturePercent = fields[self.headers.index("MoisturePercent")]
+    if newCheese.MoisturePercent == "":  newCheese.MoisturePercent = None
     newCheese.ParticularitiesEN = fields[self.headers.index("ParticularitiesEn")]
     newCheese.ParticularitiesFR = fields[self.headers.index("ParticularitiesFr")]
     newCheese.FlavourEN = fields[self.headers.index("FlavourEn")]

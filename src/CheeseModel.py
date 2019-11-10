@@ -32,6 +32,7 @@ class CheeseModel:
     self.RindTypeEN = ""
     self.RindTypeFR = ""
     self.LastUpdateDate = ""
+  
   def __str__(self):
     "Convert a Cheese object to a string"
     cheeseStr = cheeseStr = ""

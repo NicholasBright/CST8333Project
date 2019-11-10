@@ -2,8 +2,9 @@ from CheeseView import CheeseView
 from CheeseModel import CheeseModel
 from CheeseDataLoader import CheeseDataLoader
 from CheeseDAO import CheeseDAO
+import sys
 
-filename = "canadianCheeseDirectory.csv"
+filename = "resources/canadianCheeseDirectory.csv"
 userInput = None
 view = CheeseView()
 dataLoader = CheeseDataLoader(filename, 200)
