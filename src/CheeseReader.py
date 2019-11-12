@@ -2,13 +2,12 @@ from CheeseView import CheeseView
 from CheeseModel import CheeseModel
 from CheeseDataLoader import CheeseDataLoader
 from CheeseDAO import CheeseDAO
-import sys
 
 filename = "resources/canadianCheeseDirectory.csv"
 userInput = None
 view = CheeseView()
-dataLoader = CheeseDataLoader(filename, 200)
-cheeseDAO = CheeseDAO()
+dataLoader = CheeseDataLoader()
+cheeseDAO = CheeseDAO.instance
 menuOptions = [
   "Reload the dataset",
   "Save data to file",
@@ -34,7 +33,7 @@ def saveCheeseFile():
     dataLoader.saveCheeseData(userInput)
 
 def displayCheeses():
-  view.showCheeseList(cheeseDAO.getCheeses())
+  view.showCheeseList(cheeseDAO.getAllCheeses())
 
 def createNewCheese():
   view.clear()
@@ -69,12 +68,12 @@ def createNewCheese():
   newCheese.RindTypeEN = view.accept("RindTypeEN:")
   newCheese.RindTypeFR = view.accept("RindTypeFR:")
   newCheese.LastUpdateDate = view.accept("LastUpdateDate:")
-  cheeseDAO.putCheese(newCheese)
+  cheeseDAO.insertCheese(newCheese)
 
 def viewCheese():
   view.clear()
   cheeseId = view.accept("ID of the cheese to view:")
-  cheese = cheeseDAO.find(int(cheeseId))
+  cheese = cheeseDAO.getCheese(int(cheeseId))
 
   if cheese == None:
     view.display("Cheese with that ID not found.")
@@ -90,11 +89,12 @@ def viewCheese():
       userMessage = "Invalid input"
     if recieved == "y":
       view.modifyCheeseMenu(cheese)
+      cheeseDAO.updateCheese(cheese)
 
 def removeCheese():
   view.clear()
   cheeseId = view.accept("ID of the cheese to remove:")
-  if cheeseDAO.remove(int(cheeseId)):
+  if cheeseDAO.deleteCheese(int(cheeseId)):
     view.display("Cheese removed")
   else:
     view.display("Cheese wtih that ID not found")
@@ -112,7 +112,7 @@ while quitFlag == 0:
   userMessage = ""
   userInput = view.accept("Selection: ").lower()
   if(userInput == str(menuOptions.index("Reload the dataset")+1)):
-    cheeseDAO.remove("ALL")
+    cheeseDAO.truncateCheese()
     dataLoader.readCheeseData(filename, 200)
     userMessage = "Dataset reloaded from disk"
   elif(userInput == str(menuOptions.index("Save data to file")+1)):

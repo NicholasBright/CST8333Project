@@ -1,6 +1,6 @@
 class CheeseModel:
   "A class to hold the cheese data"
-  def __init__(self, CheeseId=-1):
+  def __init__(self, CheeseId=None):
     "Create a new Cheese object"
     self.CheeseId = CheeseId
     self.CheeseNameEN = ""

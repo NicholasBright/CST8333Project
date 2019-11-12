@@ -1,0 +1,1 @@
+SELECT * FROM cheese WHERE cheese_id = %s

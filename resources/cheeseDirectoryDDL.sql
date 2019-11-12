@@ -1,6 +1,6 @@
 DROP TABLE IF EXISTS cheese;
 
-CREATE TABLE IF NOT EXISTS cheese (
+CREATE TABLE cheese (
   cheese_id INT PRIMARY KEY AUTO_INCREMENT,
   cheese_name_en VARCHAR ( 50 ),
   cheese_name_fr VARCHAR ( 50 ),
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS cheese (
   website_fr VARCHAR ( 70 ),
   fat_content_percent INT,
   moisture_percent INT,
-  Particularities_en VARCHAR ( 200 ),
+  particularities_en VARCHAR ( 200 ),
   particularities_fr VARCHAR ( 200 ),
   flavour_en VARCHAR ( 200 ),
   flavour_fr VARCHAR ( 200 ),

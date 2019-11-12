@@ -1,5 +1,6 @@
 from CheeseModel import CheeseModel
 from CheeseDAO import CheeseDAO
+import datetime
 import logging
 import sys
 
@@ -33,12 +34,10 @@ class CheeseDataLoader:
     # linesToRead and creating an object for each
     for cheeseDataLine in cheeseFile:
       cheese = self.readCheeseDataLine(cheeseDataLine.replace("\n",""))
-      cheeseDAO.putCheese(cheese)
       cheeseDAO.insertCheese(cheese)
       recordsRead += 1
       if recordsRead >= linesToRead:
         break
-    input(cheeseDAO.getCheeses().__len__())
     return cheeseDAO
 
   def readCheeseDataLine ( self, cheeseData ):
@@ -56,37 +55,38 @@ class CheeseDataLoader:
       fieldIndex += 1
 
     newCheese = CheeseModel(int(fields[self.headers.index("CheeseId")]))
-    newCheese.CheeseNameEN = fields[self.headers.index("CheeseNameEn")]
-    newCheese.CheeseNameFR = fields[self.headers.index("CheeseNameFr")]
-    newCheese.ManufacturerNameEN = fields[self.headers.index("ManufacturerNameEn")]
-    newCheese.ManufacturerNameFR = fields[self.headers.index("ManufacturerNameFr")]
-    newCheese.ManufacturerProvCode = fields[self.headers.index("ManufacturerProvCode")]
-    newCheese.ManufacturingTypeEN = fields[self.headers.index("ManufacturingTypeEn")]
-    newCheese.ManufacturingTypeFR = fields[self.headers.index("ManufacturingTypeFr")]
-    newCheese.WebSiteEN = fields[self.headers.index("WebSiteEn")]
-    newCheese.WebSiteFR = fields[self.headers.index("WebSiteFr")]
-    newCheese.FatContentPercent = fields[self.headers.index("FatContentPercent")]
-    if newCheese.FatContentPercent == "":  newCheese.FatContentPercent = None
-    newCheese.MoisturePercent = fields[self.headers.index("MoisturePercent")]
-    if newCheese.MoisturePercent == "":  newCheese.MoisturePercent = None
-    newCheese.ParticularitiesEN = fields[self.headers.index("ParticularitiesEn")]
-    newCheese.ParticularitiesFR = fields[self.headers.index("ParticularitiesFr")]
-    newCheese.FlavourEN = fields[self.headers.index("FlavourEn")]
-    newCheese.FlavourFR = fields[self.headers.index("FlavourFr")]
-    newCheese.CharacteristicsEN = fields[self.headers.index("CharacteristicsEn")]
-    newCheese.CharacteristicsFR = fields[self.headers.index("CharacteristicsFr")]
-    newCheese.RipeningEN = fields[self.headers.index("RipeningEn")]
-    newCheese.RipeningFR = fields[self.headers.index("RipeningFr")]
-    newCheese.Organic = fields[self.headers.index("Organic")]
-    newCheese.CategoryTypeEN = fields[self.headers.index("CategoryTypeEn")]
-    newCheese.CategoryTypeFR = fields[self.headers.index("CategoryTypeFr")]
-    newCheese.MilkTypeEN = fields[self.headers.index("MilkTypeEn")]
-    newCheese.MilkTypeFR = fields[self.headers.index("MilkTypeFr")]
-    newCheese.MilkTreatmentTypeEN = fields[self.headers.index("MilkTreatmentTypeEn")]
-    newCheese.MilkTreatmentTypeFR = fields[self.headers.index("MilkTreatmentTypeFr")]
-    newCheese.RindTypeEN = fields[self.headers.index("RindTypeEn")]
-    newCheese.RindTypeFR = fields[self.headers.index("RindTypeFr")]
-    newCheese.LastUpdateDate = fields[self.headers.index("LastUpdateDate")]
+    newCheese.CheeseNameEN = fields[self.headers.index("CheeseNameEn")] if fields[self.headers.index("CheeseNameEn")] != "" else None
+    newCheese.CheeseNameFR = fields[self.headers.index("CheeseNameFr")] if fields[self.headers.index("CheeseNameFr")] != "" else None
+    newCheese.ManufacturerNameEN = fields[self.headers.index("ManufacturerNameEn")] if fields[self.headers.index("ManufacturerNameEn")] != "" else None
+    newCheese.ManufacturerNameFR = fields[self.headers.index("ManufacturerNameFr")] if fields[self.headers.index("ManufacturerNameFr")] != "" else None
+    newCheese.ManufacturerProvCode = fields[self.headers.index("ManufacturerProvCode")] if fields[self.headers.index("ManufacturerProvCode")] != "" else None
+    newCheese.ManufacturingTypeEN = fields[self.headers.index("ManufacturingTypeEn")] if fields[self.headers.index("ManufacturingTypeEn")] != "" else None
+    newCheese.ManufacturingTypeFR = fields[self.headers.index("ManufacturingTypeFr")] if fields[self.headers.index("ManufacturingTypeFr")] != "" else None
+    newCheese.WebSiteEN = fields[self.headers.index("WebSiteEn")] if fields[self.headers.index("WebSiteEn")] != "" else None
+    newCheese.WebSiteFR = fields[self.headers.index("WebSiteFr")] if fields[self.headers.index("WebSiteFr")] != "" else None
+    newCheese.FatContentPercent = float(fields[self.headers.index("FatContentPercent")]) if fields[self.headers.index("FatContentPercent")].isnumeric() else None
+    newCheese.MoisturePercent = float(fields[self.headers.index("MoisturePercent")]) if fields[self.headers.index("MoisturePercent")].isnumeric() else None
+    newCheese.ParticularitiesEN = fields[self.headers.index("ParticularitiesEn")] if fields[self.headers.index("ParticularitiesEn")] != "" else None
+    newCheese.ParticularitiesFR = fields[self.headers.index("ParticularitiesFr")] if fields[self.headers.index("ParticularitiesFr")] != "" else None
+    newCheese.FlavourEN = fields[self.headers.index("FlavourEn")] if fields[self.headers.index("FlavourEn")] != "" else None
+    newCheese.FlavourFR = fields[self.headers.index("FlavourFr")] if fields[self.headers.index("FlavourFr")] != "" else None
+    newCheese.CharacteristicsEN = fields[self.headers.index("CharacteristicsEn")] if fields[self.headers.index("CharacteristicsEn")] != "" else None
+    newCheese.CharacteristicsFR = fields[self.headers.index("CharacteristicsFr")] if fields[self.headers.index("CharacteristicsFr")] != "" else None
+    newCheese.RipeningEN = fields[self.headers.index("RipeningEn")] if fields[self.headers.index("RipeningEn")] != "" else None
+    newCheese.RipeningFR = fields[self.headers.index("RipeningFr")] if fields[self.headers.index("RipeningFr")] != "" else None
+    newCheese.Organic = fields[self.headers.index("Organic")] if fields[self.headers.index("Organic")] != "" else None
+    newCheese.CategoryTypeEN = fields[self.headers.index("CategoryTypeEn")] if fields[self.headers.index("CategoryTypeEn")] != "" else None
+    newCheese.CategoryTypeFR = fields[self.headers.index("CategoryTypeFr")] if fields[self.headers.index("CategoryTypeFr")] != "" else None
+    newCheese.MilkTypeEN = fields[self.headers.index("MilkTypeEn")] if fields[self.headers.index("MilkTypeEn")] != "" else None
+    newCheese.MilkTypeFR = fields[self.headers.index("MilkTypeFr")] if fields[self.headers.index("MilkTypeFr")] != "" else None
+    newCheese.MilkTreatmentTypeEN = fields[self.headers.index("MilkTreatmentTypeEn")] if fields[self.headers.index("MilkTreatmentTypeEn")] != "" else None
+    newCheese.MilkTreatmentTypeFR = fields[self.headers.index("MilkTreatmentTypeFr")] if fields[self.headers.index("MilkTreatmentTypeFr")] != "" else None
+    newCheese.RindTypeEN = fields[self.headers.index("RindTypeEn")] if fields[self.headers.index("RindTypeEn")] != "" else None
+    newCheese.RindTypeFR = fields[self.headers.index("RindTypeFr")] if fields[self.headers.index("RindTypeFr")] != "" else None
+    try:
+      newCheese.LastUpdateDate = datetime.datetime.strptime(fields[self.headers.index("LastUpdateDate")],"%Y-%m-%d").date()
+    except (ValueError, TypeError):
+      newCheese.LastUpdateDate = None
     return newCheese
 
   def saveCheeseData(self, filename):
@@ -97,7 +97,7 @@ class CheeseDataLoader:
       if(self.headers.index(header)+1 != len(self.headers)):
         saveToFile.write(',')
     saveToFile.write("\n")
-    for cheese in CheeseDAO().getCheeses():
+    for cheese in CheeseDAO().getAllCheeses():
       saveToFile.write(self.__generateCheeseCSVLine__(cheese) + "\n")
     input("Completed successfully. Press enter to contue")
 
