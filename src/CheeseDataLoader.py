@@ -7,40 +7,41 @@ import sys
 class CheeseDataLoader:
   "Object that loads cheese data from a file"
   
+  resourceFolder = "resources/"
+  savedListFolder = "lists/"
+
   def __init__(self, filename = None, linesToRead = 0):
     self.headers = []
+    self.cheeseFile = None
+    self.cheeseDAO = CheeseDAO.instance
     if(filename != None):
-      self.readCheeseData(filename, linesToRead)
+      self.openCheeseFile(filename)
+      self.readCheeseData(linesToRead)
   
-  def readCheeseData ( self, filename, linesToRead ) -> CheeseDAO:
-    if(filename == None):
-      exit
+  def openCheeseFile(self, filename):
     #Open the file
-    try:
-      cheeseFile = open(filename, encoding="utf8")
-      #I save this now because it might be useful in the future
-      #For now, I just use it to find the index of the data I am looking
-      # from the line once it has been split. MilkTypeEn has the same index
-      # in the headers and the data, so I can use headers.index("MilkTypeEn")
-      # to get the index and pull from the split line at that index for the data
-      self.headers = cheeseFile.readline().replace("\ufeff","").replace("\n","").split(",")
-    except (FileNotFoundError):
-      print("\"", filename, "\" not found. Please place \"", filename, "\" in the same directory as the program.", sep="")
-      exit
+    self.cheeseFile = open(CheeseDataLoader.resourceFolder + filename, encoding="utf8")
+  
+  def readCheeseData (self, linesToRead):
+    #I save this now because it might be useful in the future
+    #For now, I just use it to find the index of the data I am looking
+    # from the line once it has been split. MilkTypeEn has the same index
+    # in the headers and the data, so I can use headers.index("MilkTypeEn")
+    # to get the index and pull from the split line at that index for the data
+    self.headers = self.cheeseFile.readline().replace("\ufeff","").replace("\n","").split(",")
 
-    cheeseDAO = CheeseDAO()
     recordsRead = 0
     #Reading in the number of lines specified by 
     # linesToRead and creating an object for each
-    for cheeseDataLine in cheeseFile:
-      cheese = self.readCheeseDataLine(cheeseDataLine.replace("\n",""))
-      cheeseDAO.insertCheese(cheese)
-      recordsRead += 1
+    for cheeseDataLine in self.cheeseFile:
       if recordsRead >= linesToRead:
         break
-    return cheeseDAO
+      cheese = self.readCheeseDataLine(cheeseDataLine.replace("\n",""))
+      self.cheeseDAO.insertCheese(cheese)
+      recordsRead += 1
+    self.cheeseFile.close()
 
-  def readCheeseDataLine ( self, cheeseData ):
+  def readCheeseDataLine (self, cheeseData):
     "Converts a line from the data csv file into a CheeseModel.Cheese"
     fields = cheeseData.split(",")
     fieldIndex = 0
@@ -90,77 +91,83 @@ class CheeseDataLoader:
     return newCheese
 
   def saveCheeseData(self, filename):
-    filename = filename.__str__()
-    saveToFile = open(filename+".csv", "w", encoding="utf8")
+    saveToFile = open( CheeseDataLoader.savedListFolder + filename + ".csv", "w", encoding = "utf8")
+    if len(self.headers) == 0:
+      try:
+        self.openCheeseFile("canadianCheeseDirectory.csv")
+        self.readCheeseData(0)
+      except FileNotFoundError:
+        print("WARNING - canadianCheeseDirecorty.csv wasn't found in the resources folder")
+        input("The file will be saved but will be missing the header data")
     for header in self.headers:
       saveToFile.write(header)
       if(self.headers.index(header)+1 != len(self.headers)):
         saveToFile.write(',')
     saveToFile.write("\n")
-    for cheese in CheeseDAO().getAllCheeses():
+    for cheese in self.cheeseDAO.getAllCheeses():
       saveToFile.write(self.__generateCheeseCSVLine__(cheese) + "\n")
-    input("Completed successfully. Press enter to contue")
+    saveToFile.close()
 
   def __generateCheeseCSVLine__(self, cheese ) -> "":
     cheeseStr = ""
     separator = ","
-    cheeseStr = cheeseStr.__add__(str(cheese.CheeseId))
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.CheeseNameEN)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.CheeseNameFR)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.ManufacturerNameEN)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.ManufacturerNameFR)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.ManufacturerProvCode)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.ManufacturingTypeEN)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.ManufacturingTypeFR)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.WebSiteEN)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.WebSiteFR)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.FatContentPercent)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.MoisturePercent)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.ParticularitiesEN)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.ParticularitiesFR)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.FlavourEN)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.FlavourFR)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.CharacteristicsEN)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.CharacteristicsFR)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.RipeningEN)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.RipeningFR)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.Organic)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.CategoryTypeEN)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.CategoryTypeFR)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.MilkTypeEN)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.MilkTypeFR)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.MilkTreatmentTypeEN)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.MilkTreatmentTypeFR)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.RindTypeEN)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.RindTypeFR)
-    cheeseStr = cheeseStr.__add__(separator)
-    cheeseStr = cheeseStr.__add__(cheese.LastUpdateDate)
+    cheeseStr += "" if cheese.CheeseId == None else str(cheese.CheeseId)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.CheeseNameEN == None else str(cheese.CheeseNameEN)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.CheeseNameFR == None else str(cheese.CheeseNameFR)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.ManufacturerNameEN == None else str(cheese.ManufacturerNameEN)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.ManufacturerNameFR == None else str(cheese.ManufacturerNameFR)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.ManufacturerProvCode == None else str(cheese.ManufacturerProvCode)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.ManufacturingTypeEN == None else str(cheese.ManufacturingTypeEN)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.ManufacturingTypeFR == None else str(cheese.ManufacturingTypeFR)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.WebSiteEN == None else str(cheese.WebSiteEN)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.WebSiteFR == None else str(cheese.WebSiteFR)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.FatContentPercent == None else str(cheese.FatContentPercent)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.MoisturePercent == None else str(cheese.MoisturePercent)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.ParticularitiesEN == None else str(cheese.ParticularitiesEN)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.ParticularitiesFR == None else str(cheese.ParticularitiesFR)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.FlavourEN == None else str(cheese.FlavourEN)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.FlavourFR == None else str(cheese.FlavourFR)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.CharacteristicsEN == None else str(cheese.CharacteristicsEN)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.CharacteristicsFR == None else str(cheese.CharacteristicsFR)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.RipeningEN == None else str(cheese.RipeningEN)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.RipeningFR == None else str(cheese.RipeningFR)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.Organic == None else str(cheese.Organic)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.CategoryTypeEN == None else str(cheese.CategoryTypeEN)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.CategoryTypeFR == None else str(cheese.CategoryTypeFR)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.MilkTypeEN == None else str(cheese.MilkTypeEN)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.MilkTypeFR == None else str(cheese.MilkTypeFR)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.MilkTreatmentTypeEN == None else str(cheese.MilkTreatmentTypeEN)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.MilkTreatmentTypeFR == None else str(cheese.MilkTreatmentTypeFR)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.RindTypeEN == None else str(cheese.RindTypeEN)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.RindTypeFR == None else str(cheese.RindTypeFR)
+    cheeseStr += separator
+    cheeseStr += "" if cheese.LastUpdateDate == None else str(cheese.LastUpdateDate)
     return cheeseStr.replace("\n","")
