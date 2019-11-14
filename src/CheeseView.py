@@ -1,29 +1,64 @@
-from os import system, name
 from CheeseDAO import CheeseDAO
+from CheeseDataLoader import CheeseDataLoader
 from CheeseModel import CheeseModel
+import datetime
 import math
+from os import system, name
 import re
-class CheeseView:
-  "A menu for reading cheese data"
 
-  def __init__(self):
-    self.quitFlag = 0
-    self.options = []
-    self.cheeseDAO = CheeseDAO.instance
+class CheeseFormatter:
+  def getCheeseSummaryInfo(self, cheese):
+    return (str(cheese.CheeseId) + ": " + 
+      ("Unknown" if cheese.CheeseNameEN == None else cheese.CheeseNameEN) 
+      + " made by " + 
+      ("Unknown" if cheese.ManufacturerNameEN == None else cheese.ManufacturerNameEN)
+      + ", Province: " +
+      ("Unknown" if cheese.ManufacturerProvCode == None else cheese.ManufacturerProvCode)
+      + ", Type: " +
+      ("Unknown" if cheese.ManufacturingTypeEN == None else cheese.ManufacturingTypeEN))
+  
+  def getLongformCheeseLines(self, cheese):
+    lines = []
+    lines.append(self.getCheeseSummaryInfo(cheese))
+    lines.append("WebSite: " + ("Unknown" if cheese.WebSiteEN == None else cheese.WebSiteEN))
+    lines.append("FatContentPercent: " + ("Unknown" if cheese.FatContentPercent == None else str(cheese.FatContentPercent)))
+    lines.append("MoisturePercent: " + ("Unknown" if cheese.MoisturePercent == None else str(cheese.MoisturePercent)))
+    lines.append("Particularities: " + ("Unknown" if cheese.ParticularitiesEN == None else cheese.ParticularitiesEN))
+    lines.append("Flavour: " + ("Unknown" if cheese.FlavourEN == None else cheese.FlavourEN))
+    lines.append("Characteristics: " + ("Unknown" if cheese.CharacteristicsEN == None else cheese.CharacteristicsEN))
+    lines.append("Ripening: " + ("Unknown" if cheese.RipeningEN == None else cheese.RipeningEN))
+    lines.append("Organic: " + ("Yes" if cheese.Organic == "1" else "No"))
+    lines.append("CategoryType: " + ("Unknown" if cheese.CategoryTypeEN == None else cheese.CategoryTypeEN))
+    lines.append("MilkType: " + ("Unknown" if cheese.MilkTypeEN == None else cheese.MilkTypeEN))
+    lines.append("MilkTreatmentType: " + ("Unknown" if cheese.MilkTreatmentTypeEN == None else cheese.MilkTreatmentTypeEN))
+    lines.append("RindType: " + ("Unknown" if cheese.RindTypeEN == None else cheese.RindTypeEN))
+    lines.append("LastUpdateDate: " + ("Unknown" if cheese.LastUpdateDate == None else str(cheese.LastUpdateDate)))
+    return lines
 
-  #The following method was taken from this source:
-  #
-  #https://www.geeksforgeeks.org/clear-screen-python/
-  #Accessed On: 10/20/2019
-  #Author: mohit_negi
-  #Link to profile: https://auth.geeksforgeeks.org/user/mohit_negi/articles
-  #
-  #I used it since it doesn't provide any required functionality
-  #The method clears the screen is an OS dependant way
-  # which I use because I think it makes the program
-  # look cleaner. I made poxis explicit in case you're on
-  # a different OS. The program still works just looks worse.
-  # define our clear function 
+class Page:
+  def __init__(self, headerLines = [], mainLines = [], footerLines = [], acceptLine = [], waitAfterDraw = False, numberMainLines = False):
+    self.headerLines = headerLines
+    self.mainLines = mainLines
+    self.footerLines = footerLines
+    self.informLine = ""
+    self.acceptLine = acceptLine
+    self.acceptValue = None
+    self.waitAfterDraw = waitAfterDraw
+    self.numberMainLines = numberMainLines
+  
+  def displayLine(self, message):
+    print(message)
+
+  def accept(self, message):
+    self.acceptValue = input(message)
+    return self.acceptValue
+  
+  def enterToContinue(self):
+    self.accept("Press enter to continue")
+  
+  def displayName(self):
+    self.displayLine("Nicholas Bright")
+  
   def clear(self):
     # for windows 
     if name == 'nt': 
@@ -32,191 +67,332 @@ class CheeseView:
     elif name == 'posix': 
         _ = system('clear')
 
-  def showCheeseList(self, cheeseList):
-    userMessage = ""
-    pageCount = 1
-    displayedPerPage = 10
+  def draw(self):
     self.clear()
-    self.displayName()
-    if len(cheeseList) == 0:
-      self.display("There are no cheeses to show")
+    for line in self.headerLines:
+      self.displayLine(line)
+    lineCount = 0
+    for line in self.mainLines:
+      lineCount += 1
+      self.displayLine(line if not self.numberMainLines else "(" + str(lineCount) + ") " + line)
+    for line in self.footerLines:
+      self.displayLine(line)
+    self.displayLine(self.informLine)
+    self.informLine = ""
+    if self.acceptLine != None:
+      self.accept(self.acceptLine)
+      self.processInput()
+    elif self.waitAfterDraw:
       self.enterToContinue()
-    while ((pageCount-1) * displayedPerPage) < len(cheeseList):
-      displayCount = 0
-      while(displayCount < displayedPerPage) & ((pageCount -1)*displayedPerPage + displayCount < len(cheeseList)):
-        self.displayCheeseSummaryInfo(cheeseList[(pageCount -1)*displayedPerPage + displayCount])
-        displayCount += 1
-      self.display("Page (" + str(pageCount) + "/" + str(int(math.ceil(len(cheeseList)/displayedPerPage))) + ")")
-      self.display(userMessage)
-      userInput = self.accept("Input: (Q)uit, (N)ext, (P)rev, (S)ort, or enter ID for details:(N) ")
-      if userInput == "q":
-        break
-      elif re.match("\\d+",userInput) is not None:
-        cheese = self.cheeseDAO.getCheese(int(userInput))
-        if cheese != None:
-          self.clear()
-          self.displayName()
-          self.displayLongformCheese(cheese)
-          self.enterToContinue()
+  
+  def processInput(self):
+    pass
+
+class LoopingPage (Page):
+  def __init__(self, headerLines = [], mainLines = [], footerLines = [], acceptLine = [], waitAfterDraw = False, numberMainLines = False):
+    self.quitFlag = False
+    Page.__init__(self, headerLines, mainLines, footerLines, acceptLine, waitAfterDraw, numberMainLines)
+  
+  def draw(self):
+    while not self.quitFlag:
+      Page.draw(self)
+
+class Menu (Page):
+  def __init__(self, headerLines = [], optionDict = {}, footerLines = [], acceptLine = [], waitAfterDraw = False, numberMainLines = False):
+    self.optionDict = optionDict
+    Page.__init__(self, headerLines, list(optionDict.keys()), footerLines, acceptLine, waitAfterDraw, numberMainLines)
+
+  def triggerOption(self, val):
+    self.optionDict[val]()
+  
+  def triggerOptionByNumber(self, num):
+    self.triggerOption(list(self.optionDict.keys())[num])
+
+class MainMenu (Menu):
+  def __init__(self):
+    self._quitFlag = False
+    headerLines = [
+      "Nicholas Bright"
+    ]
+    optionDict = {
+      "Reload the dataset":self.reloadTheDataset,
+      "Save data to file":self.saveDataToFile,
+      "Display records":self.displayRecords,
+      "Create new cheese":self.createNewCheese,
+      "Select, Display, or Edit Cheese":self.selectDisplayCheese,
+      "Remove a cheese":self.removeCheese,
+      "Quit":self.quit
+    }
+    footerLines = []
+    acceptLine = "Selection: "
+    Menu.__init__(self, headerLines, optionDict, footerLines, acceptLine, False, True)
+  
+  def draw(self):
+    while not self._quitFlag:
+      Page.draw(self)
+  
+  def processInput(self):
+    if self.acceptValue.isdigit():
+      intVal = int(self.acceptValue) - 1
+      self.triggerOptionByNumber(intVal)
+    else:
+      self.informLine = "Please enter a number"
+  
+  def reloadTheDataset(self):
+    ReloadDatasetPage().draw()
+
+  def saveDataToFile(self):
+    SaveDataToFilePage().draw()
+
+  def displayRecords(self):
+    DisplayCheeseListPage().draw()
+
+  def createNewCheese(self):
+    CreateNewCheesePage().draw()
+
+  def selectDisplayCheese(self):
+    SelectDisplayCheesePage(None).draw()
+
+  def removeCheese(self):
+    RemoveCheesePage().draw()
+
+  def quit(self):
+    self._quitFlag = True
+
+class ReloadDatasetPage(LoopingPage):
+  def __init__(self):
+    self.cheeseDAO = CheeseDAO.instance
+    self.dataLoader = CheeseDataLoader()
+    LoopingPage.__init__(self, headerLines=["Nicholas Bright"], mainLines=["What file to should be read?"], acceptLine="Filename: ")
+  
+  def draw(self):
+    while not self.quitFlag:
+      Page.draw(self)
+  
+  def processInput(self):
+    try:
+      self.dataLoader.openCheeseFile(self.acceptValue)
+      self.cheeseDAO.truncateCheese()
+      self.dataLoader.readCheeseData(200)
+      self.quitFlag = True
+    except (FileNotFoundError, PermissionError):
+      tryAgainPage = TryAgainPage(["File not found"])
+      tryAgainPage.draw()
+      self.quitFlag = not tryAgainPage.acceptValue
+
+class SaveDataToFilePage(Page):
+  def __init__(self):
+    self.dataLoader = CheeseDataLoader()
+    Page.__init__(self, headerLines = ["Nicholas Bright"], acceptLine = "Filename to save to: ")
+  
+  def processInput(self):
+    self.dataLoader.saveCheeseData(self.acceptValue)
+
+class TryAgainPage(LoopingPage):
+  def __init__(self, ErrorMessages = []):
+    LoopingPage.__init__(self, headerLines = ["Nicholas Bright"], mainLines = ErrorMessages, acceptLine = "Try again? (Y/N) ")
+  
+  def draw(self):
+    while not self.quitFlag:
+      Page.draw(self)
+
+  def processInput(self):
+    if self.acceptValue.lower() in {"y", "n"}:
+      self.acceptValue = self.acceptValue.lower() == "y"
+      self.quitFlag = True
+    else:
+      self.informLine = "Enter Y or N"
+
+class DisplayCheeseListPage (LoopingPage):
+  def __init__(self):
+    self.cheeseDAO = CheeseDAO.instance
+    self.formatter = CheeseFormatter()
+    self.cheeseList = self.cheeseDAO.getAllCheeses()
+    self.pageCount = 1
+    self.displayedPerPage = 10
+    self.maxPage = int(math.ceil(len(self.cheeseList)/self.displayedPerPage))
+    LoopingPage.__init__(self, headerLines = ["Nicholas Bright"], acceptLine = "Input: (Q)uit, (N)ext, (P)rev, (S)ort, or enter ID for details:(N) ")
+    self.populateLines()
+
+  def processInput(self):
+    if self.acceptValue.isdigit():
+      cheese = self.cheeseDAO.getCheese(int(self.acceptValue))
+      if cheese == None:
+        self.informLine = "No cheese with that ID found"
+      else:
+        SelectDisplayCheesePage(cheese).draw()
+    else:
+      self.acceptValue = self.acceptValue.lower()
+      if self.acceptValue == "q":
+        self.quitFlag = True
+      elif self.acceptValue in {"n", ""}:
+        self.pageCount += 1
+        if self.pageCount > self.maxPage:
+          self.quitFlag = True
         else:
-          userMessage = "ID not found"
-      elif (userInput == "n") | (userInput == ""):
-        pageCount += 1
-        if pageCount > len(cheeseList):
-          break
-      elif userInput == "p":
-        pageCount -= 1
-        if pageCount < 1:
-          pageCount = 1
-      elif userInput == "s":
-        self.clear()
-        self.displayName()
-        attr = self.accept("What attribute do you want to sort on? ")
-        if hasattr(CheeseModel(),attr):
-          reverse = (self.accept("Reserve order? (No by default, anything else for yes)") == "")
-          cheeseList.sort(key=lambda x: getattr(x, attr), reverse=reverse)
+          self.populateLines()
+      elif self.acceptValue == "p":
+        self.pageCount -= 1
+        if self.pageCount < 1:
+          self.pageCount = 1
+        self.populateLines()
+      elif self.acceptValue == "s":
+        SortCheeseListPage(self.cheeseList).draw()
+        self.populateLines()
+
+  def populateLines(self):
+    self.mainLines = []
+    self.footerLines = []
+    if len(self.cheeseList) == 0:
+      self.mainLines.append("There are no cheeses to show")
+    displayCount = 0
+    while(displayCount < self.displayedPerPage) & ((self.pageCount -1)*self.displayedPerPage + displayCount < len(self.cheeseList)):
+      self.mainLines.append(self.formatter.getCheeseSummaryInfo(self.cheeseList[(self.pageCount -1)*self.displayedPerPage + displayCount]))
+      displayCount += 1
+    self.footerLines.append("Page (" + str(self.pageCount) + "/" + str(self.maxPage) + ")")
+
+class SortCheeseListPage (LoopingPage):
+  def __init__(self, cheeseList):
+    self.cheeseList = cheeseList
+    self.sortBy = None
+    self.reverseVal = None
+    LoopingPage.__init__(self, headerLines = ["Nicholas Bright"], acceptLine = "What attribute do you want to sort on? ")
+  
+  def processInput(self):
+    if self.sortBy == None:
+      if hasattr(CheeseModel(),self.acceptValue):
+        self.sortBy = self.acceptValue
+        self.acceptLine = "Reserve order? (Y/N)"
+      else:
+        tryAgainPage = TryAgainPage(["Cheeses don't have that attribute"])
+        tryAgainPage.draw()
+        self.quitFlag = not tryAgainPage.acceptValue
+    else:
+      self.acceptValue = self.acceptValue.lower()
+      if self.acceptValue in {"y", "n"}:
+        self.cheeseList.sort(key=lambda x: getattr(x, self.sortBy), reverse = self.acceptValue == "y")
+        self.quitFlag = True
+      else:
+        self.informLine = "Enter Y or N"
+
+class SelectDisplayCheesePage (LoopingPage):
+  def __init__(self, cheese):
+    self.cheese = cheese
+    self.formatter = CheeseFormatter()
+    self.cheeseDAO = CheeseDAO.instance
+    LoopingPage.__init__(self, headerLines = ["Nicholas Bright"])
+    self.populateLines()
+
+  def processInput(self):
+    if self.cheese == None:
+      if self.acceptValue.isdigit():
+        self.cheese = self.cheeseDAO.getCheese(int(self.acceptValue))
+        self.populateLines()
+        if self.cheese == None:
+          tryAgainPage = TryAgainPage(["Cheese with that ID not found"])
+          tryAgainPage.draw()
+          self.quitFlag = not tryAgainPage.acceptValue
+      else:
+        self.informLine = "Please enter a valid ID"
+    else:
+      self.acceptValue = self.acceptValue.lower()
+      if self.acceptValue in {"y", "n"}:
+        if self.acceptValue == "y":
+          ModifyCheeseMenu(self.cheese).draw()
+          self.quitFlag = True
         else:
-          self.display("Cheeses don't have that attribute")
-          self.enterToContinue()
+          self.quitFlag = self.acceptValue == "n"
+      else:
+        self.informLine = "Enter Y or N"
 
-  def showMenu(self):
-    self.displayName()
-    self.displayMenuOptions()
+  def populateLines(self):
+    if self.cheese == None:
+      self.mainLines = []
+      self.acceptLine = "Enter the ID of the cheese: "
+    else:
+      self.mainLines = self.formatter.getLongformCheeseLines(self.cheese)
+      self.acceptLine = "Modify this cheese? (Y/N)"
 
-  def displayMenuOptions (self):
-    for option in self.options:
-      self.display("(" + str(self.options.index(option) + 1) + ") - " + option)
+class ModifyCheeseMenu (LoopingPage):
+  def __init__(self, cheese):
+    self.cheese = cheese
+    self.cheeseDAO = CheeseDAO.instance
+    self.modifying = False
+    self.nextToModify = list(cheese.__dict__.keys())
+    self.nextToModify.remove("CheeseId")
+    LoopingPage.__init__(self, headerLines = ["Nicholas Bright"])
+    self.populateLines()
   
-  def getOptions(self):
-    return self.options
+  def processInput(self):
+    if not self.modifying:
+      self.acceptValue = self.acceptValue.lower()
+      if self.acceptValue in {"y", "n"}:
+        self.modifying = self.acceptValue == "y"
+        if self.modifying:
+          self.acceptLine = "Enter a new value "
+        else:
+          self.nextToModify.pop(0)
+          if len(self.nextToModify) == 0:
+            self.quitFlag = True
+            if self.cheese.CheeseId == None:
+              self.cheeseDAO.insertCheese(self.cheese)
+            else:
+              self.cheeseDAO.updateCheese(self.cheese)
+      else:
+        self.informLine = "Enter Y or N"
+    else:
+      setAttr = True
+      attrToModify = self.nextToModify[0]
+      if attrToModify in {"FatContentPercent", "MoisturePercent"}:
+        if re.match("^\\d+(\\.\\d+)*$", self.acceptValue) is not None:
+          self.acceptValue = float(self.acceptValue)
+        else:
+          setAttr = False
+          self.informLine = "Please enter an integer or a float"
+      elif attrToModify == "LastUpdateDate":
+        try:
+          newDate = datetime.datetime.strptime(self.acceptValue,"%Y-%m-%d").date()
+          self.cheese.LastUpdateDate = newDate
+        except (ValueError, TypeError):
+          setAttr = False
+          self.informLine = "Please use the format YYYY-MM-DD"
+      if setAttr:
+        self.modifying = False
+        self.cheese.__setattr__(attrToModify, None if self.acceptValue == "" else self.acceptValue)
+        self.nextToModify.pop(0)
+    
+    if len(self.nextToModify) == 0:
+      self.quitFlag = True
+      if self.cheese.CheeseId == None:
+        self.cheeseDAO.insertCheese(self.cheese)
+      else:
+        self.cheeseDAO.updateCheese(self.cheese)
+    elif not self.modifying:
+      self.populateLines()
 
-  def setOptions(self, options = []):
-    self.options = options
+  def populateLines(self):
+    attrVal = self.cheese.__getattribute__(self.nextToModify[0])
+    self.mainLines = [(self.nextToModify[0] + " = " + ("" if attrVal == None else str(attrVal)))]
+    self.acceptLine = "Modify this attribute? (Y/N)"
 
-  def display(self, message):
-    print(message)
+class CreateNewCheesePage (ModifyCheeseMenu):
+  def __init__(self):
+    ModifyCheeseMenu.__init__(self, CheeseModel())
+    ModifyCheeseMenu.modifying = True
+
+class RemoveCheesePage (LoopingPage):
+  def __init__(self):
+    self.cheeseDAO = CheeseDAO.instance
+    LoopingPage.__init__(self, headerLines = ["Nicholas Bright"], acceptLine = "ID of the cheese to remove ")
   
-  def accept(self, message):
-    return input(message)
-
-  def modifyCheeseMenu(self, cheese):
-    self.displayName()
-    userInput = input("CheeseNameEN(" + str(cheese.CheeseNameEN) + ")")
-    if userInput != "":
-      cheese.CheeseNameEN = userInput
-    userInput = input("CheeseNameFR(" + str(cheese.CheeseNameFR) + ")")
-    if userInput != "":
-      cheese.CheeseNameFR = userInput
-    userInput = input("ManufacturerNameEN(" + str(cheese.ManufacturerNameEN) + ")")
-    if userInput != "":
-      cheese.ManufacturerNameEN = userInput
-    userInput = input("ManufacturerNameFR(" + str(cheese.ManufacturerNameFR) + ")")
-    if userInput != "":
-      cheese.ManufacturerNameFR = userInput
-    userInput = input("ManufacturerProvCode(" + str(cheese.ManufacturerProvCode) + ")")
-    if userInput != "":
-      cheese.ManufacturerProvCode = userInput
-    userInput = input("ManufacturingTypeEN(" + str(cheese.ManufacturingTypeEN) + ")")
-    if userInput != "":
-      cheese.ManufacturingTypeEN = userInput
-    userInput = input("ManufacturingTypeFR(" + str(cheese.ManufacturingTypeFR) + ")")
-    if userInput != "":
-      cheese.ManufacturingTypeFR = userInput
-    userInput = input("WebSiteEN(" + str(cheese.WebSiteEN) + ")")
-    if userInput != "":
-      cheese.WebSiteEN = userInput
-    userInput = input("WebSiteFR(" + str(cheese.WebSiteFR) + ")")
-    if userInput != "":
-      cheese.WebSiteFR = userInput
-    userInput = input("FatContentPercent(" + str(cheese.FatContentPercent) + ")")
-    if userInput != "":
-      cheese.FatContentPercent = userInput
-    userInput = input("MoisturePercent(" + str(cheese.MoisturePercent) + ")")
-    if userInput != "":
-      cheese.MoisturePercent = userInput
-    userInput = input("ParticularitiesEN(" + str(cheese.ParticularitiesEN) + ")")
-    if userInput != "":
-      cheese.ParticularitiesEN = userInput
-    userInput = input("ParticularitiesFR(" + str(cheese.ParticularitiesFR) + ")")
-    if userInput != "":
-      cheese.ParticularitiesFR = userInput
-    userInput = input("FlavourEN(" + str(cheese.FlavourEN) + ")")
-    if userInput != "":
-      cheese.FlavourEN = userInput
-    userInput = input("FlavourFR(" + str(cheese.FlavourFR) + ")")
-    if userInput != "":
-      cheese.FlavourFR = userInput
-    userInput = input("CharacteristicsEN(" + str(cheese.CharacteristicsEN) + ")")
-    if userInput != "":
-      cheese.CharacteristicsEN = userInput
-    userInput = input("CharacteristicsFR(" + str(cheese.CharacteristicsFR)+ ")")
-    if userInput != "":
-      cheese.CharacteristicsFR = userInput
-    userInput = input("RipeningEN(" + str(cheese.RipeningEN) + ")")
-    if userInput != "":
-      cheese.RipeningEN = userInput
-    userInput = input("RipeningFR(" + str(cheese.RipeningFR) + ")")
-    if userInput != "":
-      cheese.RipeningFR = userInput
-    userInput = input("Organic(" + str(cheese.Organic) + ")")
-    if userInput != "":
-      cheese.Organic = userInput
-    userInput = input("CategoryTypeEN(" + str(cheese.CategoryTypeEN) + ")")
-    if userInput != "":
-      cheese.CategoryTypeEN = userInput
-    userInput = input("CategoryTypeFR(" + str(cheese.CategoryTypeFR) + ")")
-    if userInput != "":
-      cheese.CategoryTypeFR = userInput
-    userInput = input("MilkTypeEN(" + str(cheese.MilkTypeEN) + ")")
-    if userInput != "":
-      cheese.MilkTypeEN = userInput
-    userInput = input("MilkTypeFR(" + str(cheese.MilkTypeFR) + ")")
-    if userInput != "":
-      cheese.MilkTypeFR = userInput
-    userInput = input("MilkTreatmentTypeEN(" + str(cheese.MilkTreatmentTypeEN) + ")")
-    if userInput != "":
-      cheese.MilkTreatmentTypeEN = userInput
-    userInput = input("MilkTreatmentTypeFR(" + str(cheese.MilkTreatmentTypeFR) + ")")
-    if userInput != "":
-      cheese.MilkTreatmentTypeFR = userInput
-    userInput = input("RindTypeEN(" + str(cheese.RindTypeEN) + ")")
-    if userInput != "":
-      cheese.RindTypeEN = userInput
-    userInput = input("RindTypeFR(" + str(cheese.RindTypeFR) + ")")
-    if userInput != "":
-      cheese.RindTypeFR = userInput
-    userInput = input("LastUpdateDate(" + str(cheese.LastUpdateDate) + ")")
-    if userInput != "":
-      cheese.LastUpdateDate = userInput
-  
-  def enterToContinue(self):
-    input("Press enter to continue")
-
-  def displayCheeseSummaryInfo(self, cheese):
-    self.display(str(cheese.CheeseId) + ": " + 
-      ("Unknown" if cheese.CheeseNameEN == None else cheese.CheeseNameEN) 
-      + " made by " + 
-      ("Unknown" if cheese.ManufacturerNameEN == None else cheese.ManufacturerNameEN)
-      + ", Province: " +
-      ("Unknown" if cheese.ManufacturerProvCode == None else cheese.ManufacturerProvCode)
-      + ", Type: " +
-      ("Unknown" if cheese.ManufacturingTypeEN == None else cheese.ManufacturingTypeEN))
-
-  def displayLongformCheese(self, cheese):
-    self.displayCheeseSummaryInfo(cheese)
-    self.display("WebSite: " + ("Unknown" if cheese.WebSiteEN == None else cheese.WebSiteEN))
-    self.display("FatContentPercent: " + ("Unknown" if cheese.FatContentPercent == None else str(cheese.FatContentPercent)))
-    self.display("MoisturePercent: " + ("Unknown" if cheese.MoisturePercent == None else str(cheese.MoisturePercent)))
-    self.display("Particularities: " + ("Unknown" if cheese.ParticularitiesEN == None else cheese.ParticularitiesEN))
-    self.display("Flavour: " + ("Unknown" if cheese.FlavourEN == None else cheese.FlavourEN))
-    self.display("Characteristics: " + ("Unknown" if cheese.CharacteristicsEN == None else cheese.CharacteristicsEN))
-    self.display("Ripening: " + ("Unknown" if cheese.RipeningEN == None else cheese.RipeningEN))
-    self.display("Organic: " + ("Yes" if cheese.Organic == "1" else "No"))
-    self.display("CategoryType: " + ("Unknown" if cheese.CategoryTypeEN == None else cheese.CategoryTypeEN))
-    self.display("MilkType: " + ("Unknown" if cheese.MilkTypeEN == None else cheese.MilkTypeEN))
-    self.display("MilkTreatmentType: " + ("Unknown" if cheese.MilkTreatmentTypeEN == None else cheese.MilkTreatmentTypeEN))
-    self.display("RindType: " + ("Unknown" if cheese.RindTypeEN == None else cheese.RindTypeEN))
-    self.display("LastUpdateDate: " + ("Unknown" if cheese.LastUpdateDate == None else str(cheese.LastUpdateDate)))
-  
-  def displayName(self):
-    self.display("Nicholas Bright")
+  def processInput(self):
+    if self.acceptValue.isdigit():
+      self.acceptValue = int(self.acceptValue)
+      if not self.cheeseDAO.deleteCheese(self.acceptValue):
+        tryAgainPage = TryAgainPage(["Failed to remove cheese with that ID"])
+        tryAgainPage.draw()
+        self.quitFlag = not tryAgainPage.acceptValue
+      else:
+        self.quitFlag = True
+    else:
+      self.informLine = "Please enter an integer ID"
