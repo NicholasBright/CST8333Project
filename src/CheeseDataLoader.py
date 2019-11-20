@@ -5,12 +5,13 @@ import logging
 import sys
 
 class CheeseDataLoader:
-  "Object that loads cheese data from a file"
+  "Object that loads cheese data from a file and sends them to the DB"
   
   resourceFolder = "resources/"
   savedListFolder = "lists/"
 
   def __init__(self, filename = None, linesToRead = 0):
+    "Creates a new CheeseDataLoader and if a filename is supplied begins reading that file into the DB"
     self.headers = []
     self.cheeseFile = None
     self.cheeseDAO = CheeseDAO.instance
@@ -19,12 +20,12 @@ class CheeseDataLoader:
       self.readCheeseData(linesToRead)
   
   def openCheeseFile(self, filename):
-    #Open the file
+    "Opens a file that contains cheese data"
     self.cheeseFile = open(CheeseDataLoader.resourceFolder + filename, encoding="utf8")
   
-  def readCheeseData (self, linesToRead):
-    #I save this now because it might be useful in the future
-    #For now, I just use it to find the index of the data I am looking
+  def readCheeseData (self, linesToRead = -1):
+    "Read Cheese data from a file. It will read the number of lines specified, the default value reads all lines."
+    # I just use this to find the index of the data I am looking
     # from the line once it has been split. MilkTypeEn has the same index
     # in the headers and the data, so I can use headers.index("MilkTypeEn")
     # to get the index and pull from the split line at that index for the data
@@ -34,7 +35,7 @@ class CheeseDataLoader:
     #Reading in the number of lines specified by 
     # linesToRead and creating an object for each
     for cheeseDataLine in self.cheeseFile:
-      if recordsRead >= linesToRead:
+      if recordsRead >= linesToRead & linesToRead != -1:
         break
       cheese = self.readCheeseDataLine(cheeseDataLine.replace("\n",""))
       self.cheeseDAO.insertCheese(cheese)
@@ -91,6 +92,7 @@ class CheeseDataLoader:
     return newCheese
 
   def saveCheeseData(self, filename):
+    "Saves the cheeses in the DB to a file with the name passed to the method"
     saveToFile = open( CheeseDataLoader.savedListFolder + filename + ".csv", "w", encoding = "utf8")
     if len(self.headers) == 0:
       try:
@@ -109,6 +111,7 @@ class CheeseDataLoader:
     saveToFile.close()
 
   def __generateCheeseCSVLine__(self, cheese ) -> "":
+    "Turns a cheese into a csv value string"
     cheeseStr = ""
     separator = ","
     cheeseStr += "" if cheese.CheeseId == None else str(cheese.CheeseId)

@@ -3,35 +3,35 @@ class CheeseModel:
   def __init__(self, CheeseId=None):
     "Create a new Cheese object"
     self.CheeseId = CheeseId
-    self.CheeseNameEN = ""
-    self.CheeseNameFR = ""
-    self.ManufacturerNameEN = ""
-    self.ManufacturerNameFR = ""
-    self.ManufacturerProvCode = ""
-    self.ManufacturingTypeEN = ""
-    self.ManufacturingTypeFR = ""
-    self.WebSiteEN = ""
-    self.WebSiteFR = ""
-    self.FatContentPercent = ""
-    self.MoisturePercent = ""
-    self.ParticularitiesEN = ""
-    self.ParticularitiesFR = ""
-    self.FlavourEN = ""
-    self.FlavourFR = ""
-    self.CharacteristicsEN = ""
-    self.CharacteristicsFR = ""
-    self.RipeningEN = ""
-    self.RipeningFR = ""
-    self.Organic = ""
-    self.CategoryTypeEN = ""
-    self.CategoryTypeFR = ""
-    self.MilkTypeEN = ""
-    self.MilkTypeFR = ""
-    self.MilkTreatmentTypeEN = ""
-    self.MilkTreatmentTypeFR = ""
-    self.RindTypeEN = ""
-    self.RindTypeFR = ""
-    self.LastUpdateDate = ""
+    self.CheeseNameEN = None
+    self.CheeseNameFR = None
+    self.ManufacturerNameEN = None
+    self.ManufacturerNameFR = None
+    self.ManufacturerProvCode = None
+    self.ManufacturingTypeEN = None
+    self.ManufacturingTypeFR = None
+    self.WebSiteEN = None
+    self.WebSiteFR = None
+    self.FatContentPercent = None
+    self.MoisturePercent = None
+    self.ParticularitiesEN = None
+    self.ParticularitiesFR = None
+    self.FlavourEN = None
+    self.FlavourFR = None
+    self.CharacteristicsEN = None
+    self.CharacteristicsFR = None
+    self.RipeningEN = None
+    self.RipeningFR = None
+    self.Organic = None
+    self.CategoryTypeEN = None
+    self.CategoryTypeFR = None
+    self.MilkTypeEN = None
+    self.MilkTypeFR = None
+    self.MilkTreatmentTypeEN = None
+    self.MilkTreatmentTypeFR = None
+    self.RindTypeEN = None
+    self.RindTypeFR = None
+    self.LastUpdateDate = None
   
   def __str__(self):
     "Convert a Cheese object to a string"
@@ -74,6 +74,7 @@ class CheeseModel:
     return cheeseStr
   
   def __eq__(self, other):
+    "Checks equality of two cheeses"
     if (other != None) & (isinstance(other, CheeseModel)):
       return self.CheeseId == other.CheeseId
     return False

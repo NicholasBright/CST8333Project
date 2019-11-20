@@ -23,6 +23,7 @@ class CheeseDAO:
   _updateStatement = open("resources/updateStatement.txt").read()
 
   def __init__(self):
+    "Connects to the DB and ensures that the table exists"
     # When the CheeseDAO is created it connects to the DB
     # and checks to see if the table exists, and creates it if it doesn't
     DB = mysql.connector.connect(**CheeseDAO._connectionData) 
@@ -34,6 +35,7 @@ class CheeseDAO:
     DB.close()
 
   def recreateTable(self):
+    "Drops the cheese table and creates it again"
     DB = mysql.connector.connect(**CheeseDAO._connectionData)
     createTableCursor = DB.cursor()
     createTableSQL = open("resources/cheeseDirectoryDDL.sql").read()
@@ -42,6 +44,8 @@ class CheeseDAO:
     DB.close()
 
   def insertCheese(self, cheese):
+    "Inserts a cheese into the DB"
+    input("Inserting")
     DB = mysql.connector.connect(**CheeseDAO._connectionData)
     insertCursor = DB.cursor()
     insertCursor.execute(CheeseDAO._insertStatement, tuple(self._getListOfFields(cheese)))
@@ -50,9 +54,10 @@ class CheeseDAO:
     DB.close()
 
   def getCheese(self, id):
+    "Fetches a cheese from the DB and returns it"
     DB = mysql.connector.connect(**CheeseDAO._connectionData)
     getCursor = DB.cursor()
-    selectStatement = CheeseDAO._selectStatement#"SELECT * FROM cheese WHERE cheese_id = " + str(id)
+    selectStatement = CheeseDAO._selectStatement
     getCursor.execute(selectStatement, (id,))
     row = getCursor.fetchone()
     getCursor.close()
@@ -60,6 +65,7 @@ class CheeseDAO:
     return self._rowIntoCheese(row) if row != None else None
 
   def getAllCheeses(self):
+    "Fetch all cheeses in the DB and returns a list of them"
     cheeseList = []
     DB = mysql.connector.connect(**CheeseDAO._connectionData)
     getAllCursor = DB.cursor()
@@ -72,6 +78,7 @@ class CheeseDAO:
     return cheeseList
 
   def updateCheese(self, cheese):
+    "Updates a cheese in the DB"
     DB = mysql.connector.connect(**CheeseDAO._connectionData)
     updateCursor = DB.cursor()
     fieldList = self._getListOfFields(cheese)
@@ -83,6 +90,7 @@ class CheeseDAO:
     DB.close()
   
   def deleteCheese(self, id):
+    "Deletes a cheese from the DB"
     DB = mysql.connector.connect(**CheeseDAO._connectionData)
     deleteCursor = DB.cursor()
     deleteCursor.execute(CheeseDAO._deleteStatement, (id,))
@@ -93,6 +101,7 @@ class CheeseDAO:
     return toRet
 
   def truncateCheese(self):
+    "Empties the DB of all cheeses"
     truncateStatement = "TRUNCATE TABLE cheese"
     DB = mysql.connector.connect(**CheeseDAO._connectionData)
     deleteCursor = DB.cursor()
@@ -104,6 +113,7 @@ class CheeseDAO:
     return toRet
 
   def _rowIntoCheese(self, row):
+    "Turns a row from the DB into a cheese"
     cheese = CheeseModel(row[0])
     cheese.CheeseNameEN = row[1]
     cheese.CheeseNameFR = row[2]
@@ -137,6 +147,7 @@ class CheeseDAO:
     return cheese
 
   def _getListOfFields(self, cheese):
+    "Turns a cheese into a list of it's values"
     return [
       cheese.CheeseId,
       cheese.CheeseNameEN,
