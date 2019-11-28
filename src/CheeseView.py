@@ -77,7 +77,7 @@ class MainMenu (Menu):
 
   def cheeseInfo(self):
     "Draws the CheeseInfoPage"
-    CheeseInfoPage(None).draw()
+    FindCheesePage().draw()
 
   def removeCheese(self):
     "Drwas the RemoveCheesePage"
@@ -111,18 +111,6 @@ class ReloadDatasetPage(ListPage):
       DAO.truncate()
     dataLoader.readCheeseFile(item, 200)
     self.quit()
-    
-
-class SaveDataToFilePage(Page):
-  "A page to get input to save the DB to a csv file"
-  def __init__(self):
-    "Initialize the SaveDataToFilePage"
-    self.dataLoader = CheeseDataLoader()
-    Page.__init__(self, headerLines = cheeseHeader, acceptLine = "Filename to save to: ")
-  
-  def processInput(self):
-    "Triggers the save based on the filename specified"
-    self.dataLoader.saveCheeseData(self.acceptValue)
 
 class TryAgainPage(LoopingPage):
   "A page to prompt the user if they want to try again"
@@ -211,6 +199,34 @@ class CheeseInfoPage (YesNoPage):
         else:
           DAO.update(self.cheese)
 
+class FindCheesePage(EditorPage):
+  def __init__(self):
+    self.inputLine = ""
+    LoopingPage.__init__(self, headerLines = cheeseHeader, acceptLine = "Enter the ID of the Cheese to be viewed and hit enter, or press escape to exit")
+  
+  def populateLines(self):
+    super().populateLines
+    self.mainLines = ["ID:" + self.inputLine]
+
+  def processInput(self):
+    if self.acceptValue.isdigit():
+      self.inputLine += self.acceptValue
+    elif (self.acceptValue == "ENTER") and (self.inputLine != ""):
+      cheese = DAO.get(int(self.inputLine))
+      if cheese != None:
+        CheeseInfoPage(cheese).draw()
+        self.quit()
+      else:
+        self.informLine = "Failed to find cheese with that ID"
+    elif self.acceptValue == "ESCAPE":
+      self.quit()
+    elif self.acceptValue == "BACKSPACE":
+      if self.inputLine != "":
+        self.inputLine = self.inputLine[:-1]
+    else:
+      self.informLine = "Please enter an integer ID"
+
+
 class RemoveCheesePage(LoopingPage):
   "A page to remove a cheese from the DB"
   def __init__(self):
@@ -238,3 +254,24 @@ class RemoveCheesePage(LoopingPage):
         self.inputLine = self.inputLine[:-1]
     else:
       self.informLine = "Please enter an integer ID"
+
+class SaveDataToFilePage(LoopingPage):
+  def __init__(self):
+    self.inputLine = ""
+    LoopingPage.__init__(self, headerLines = cheeseHeader, acceptLine = "Enter the name for the file and hit enter, or press escape to exit")
+  
+  def populateLines(self):
+    super().populateLines
+    self.mainLines = ["Filename:" + self.inputLine]
+
+  def processInput(self):
+    if (self.acceptValue == "ENTER") and (self.inputLine != ""):
+      dataLoader.saveCheeseData(self.inputLine)
+      self.quit()
+    elif self.acceptValue == "ESCAPE":
+      self.quit()
+    elif self.acceptValue == "BACKSPACE":
+      if self.inputLine != "":
+        self.inputLine = self.inputLine[:-1]
+    else:
+      self.inputLine += self.acceptValue

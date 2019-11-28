@@ -181,7 +181,7 @@ class EditorPage(ListPage):
     self.testValidDict = testValidDict
     self.editingItem = 0
     self.editingObject = editingObject
-    self.editLine = None
+    self.editLine = ""
     if attributeNameDict == None:
       self.attributeNameDict = {}
       for attr in list(editingObject.__dict__.keys()):
@@ -189,7 +189,8 @@ class EditorPage(ListPage):
     else:
       self.attributeNameDict = attributeNameDict
     self.editingFlag = False
-    super().__init__(displayList=self.createAttrList(), headerLines=headerLines, selectAction=self.enterEditing, formatter=self.formatLine, acceptLine="Use the arrows to navigate, Escape to quit, enter to edit")
+    self.listAccept = "Use the arrows to navigate, Escape to quit, enter to edit"
+    super().__init__(displayList=self.createAttrList(), headerLines=headerLines, selectAction=self.enterEditing, formatter=self.formatLine, acceptLine=self.listAccept)
   
   def createAttrList(self):
     return list(self.attributeNameDict.keys())
@@ -215,7 +216,7 @@ class EditorPage(ListPage):
     self.editingFlag = True
     self.editingItem = self.selectedItem - 1
     self.selectedItem = -1
-    self.oldAccept = self.acceptLine
+    self.listAccept = self.acceptLine
     self.acceptLine = "Modifying Attribute. Enter to save, Escape to cancel"
 
   def processInput(self):
@@ -225,7 +226,7 @@ class EditorPage(ListPage):
       if self.acceptValue == "ESCAPE":
         self.editingFlag = False
         self.selectedItem = self.editingItem + 1
-        self.acceptLine = self.oldAccept
+        self.acceptLine = self.listAccept
       elif self.acceptValue == "ENTER":
         key = self.displayList[(self.editingItem+((self.currentPage-1)*self.itemsPerPage))]
         if self.editLine == "":
@@ -239,7 +240,7 @@ class EditorPage(ListPage):
           self.informLine = "Invalid attribute, value reset"
         self.editingFlag = False
         self.selectedItem = self.editingItem + 1
-        self.acceptLine = self.oldAccept
+        self.acceptLine = self.listAccept
       elif self.acceptValue == "BACKSPACE":
         self.editLine = self.editLine[:-1]
       elif isCharacter(self.acceptValue):

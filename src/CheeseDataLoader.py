@@ -20,43 +20,21 @@ class CheeseDataLoader:
   
   def getListOfDataFiles(self):
     return os.listdir(CheeseDataLoader._dataFolder)
-
-  def openCheeseFile(self, filename):
-    "Opens a file that contains cheese data"
-    self.cheeseFile = open(CheeseDataLoader._resourceFolder + filename, encoding="utf8")
   
   def readCheeseFile(self, filename, linesToRead = -1):
     "Read Cheese data from a file. It will read the number of lines specified, the default value reads all lines."
     with open(CheeseDataLoader._dataFolder + filename, mode="r", encoding="utf-8-sig") as cheeseFile:
-      headers = None
       dataReader = csv.reader(cheeseFile, delimiter=',', quotechar='"')
       recordsRead = 0
       for row in dataReader:
         if (recordsRead >= linesToRead) and (linesToRead != -1):
           break
         elif dataReader.line_num == 1:
-          headers = row
+          pass
         else:
           self.cheeseDAO.insertLater(self.convertRowToCheese(row))
           recordsRead += 1
       self.cheeseDAO.insertAll()
-    return
-    # I just use this to find the index of the data I am looking
-    # from the line once it has been split. MilkTypeEn has the same index
-    # in the headers and the data, so I can use headers.index("MilkTypeEn")
-    # to get the index and pull from the split line at that index for the data
-    self.headers = self.cheeseFile.readline().replace("\ufeff","").replace("\n","").split(",")
-
-    recordsRead = 0
-    #Reading in the number of lines specified by 
-    # linesToRead and creating an object for each
-    for cheeseDataLine in self.cheeseFile:
-      if recordsRead >= linesToRead & linesToRead != -1:
-        break
-      #cheese = self.readCheeseDataLine(cheeseDataLine.replace("\n",""))
-      #self.cheeseDAO.insertCheese(cheese)
-      recordsRead += 1
-    self.cheeseFile.close()
 
   def convertRowToCheese (self, row):
     newCheese = CheeseModel(row[0])
@@ -97,19 +75,11 @@ class CheeseDataLoader:
   def saveCheeseData(self, filename):
     "Saves the cheeses in the DB to a file with the name passed to the method"
     saveToFile = open( CheeseDataLoader._dataFolder + filename + ".csv", "w", encoding = "utf8")
-    if len(self.headers) == 0:
-      try:
-        self.openCheeseFile("canadianCheeseDirectory.csv")
-        self.readCheeseData(0)
-      except FileNotFoundError:
-        print("WARNING - canadianCheeseDirecorty.csv wasn't found in the resources folder")
-        input("The file will be saved but will be missing the header data")
-    for header in self.headers:
-      saveToFile.write(header)
-      if(self.headers.index(header)+1 != len(self.headers)):
-        saveToFile.write(',')
+    keyList = list(CheeseModel().__dict__.keys())
+    for header in keyList:
+      saveToFile.write(header + ("," if keyList[-1:][0] != header else ""))
     saveToFile.write("\n")
-    for cheese in self.cheeseDAO.getAllCheeses():
+    for cheese in self.cheeseDAO.getAll():
       saveToFile.write(self.__generateCheeseCSVLine__(cheese) + "\n")
     saveToFile.close()
 
