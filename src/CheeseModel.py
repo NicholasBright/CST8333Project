@@ -22,7 +22,7 @@ class CheeseModel:
     self.CharacteristicsFR = None
     self.RipeningEN = None
     self.RipeningFR = None
-    self.Organic = None
+    self.Organic = False
     self.CategoryTypeEN = None
     self.CategoryTypeFR = None
     self.MilkTypeEN = None

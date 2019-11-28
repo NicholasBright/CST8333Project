@@ -15,45 +15,112 @@ class CheeseDAO:
     'database':"cst8333"
   }
 
-  # The statements are written in a separate file for easier editing
-  # and to keep my files just a bit smaller
-  _insertStatement = open("resources/insertStatement.txt").read()
-  _selectStatement = open("resources/selectStatement.txt").read()
-  _deleteStatement = open("resources/deleteStatement.txt").read()
-  _updateStatement = open("resources/updateStatement.txt").read()
+  # Create table statement
+  _createTableStatement = "\
+DROP TABLE IF EXISTS cheese;\
+CREATE TABLE cheese (\
+  cheese_id INT PRIMARY KEY AUTO_INCREMENT,\
+  cheese_name_en VARCHAR ( 100 ),\
+  cheese_name_fr VARCHAR ( 100 ),\
+  manufacturer_name_en VARCHAR ( 50 ),\
+  manufacturer_name_fr VARCHAR ( 50 ),\
+  manufacturer_prov_code CHAR ( 2 ),\
+  manufacturing_type_en VARCHAR ( 50 ),\
+  manufacturing_type_fr VARCHAR ( 50 ),\
+  website_en VARCHAR ( 100 ),\
+  website_fr VARCHAR ( 100 ),\
+  fat_content_percent INT,\
+  moisture_percent INT,\
+  particularities_en VARCHAR ( 200 ),\
+  particularities_fr VARCHAR ( 200 ),\
+  flavour_en VARCHAR ( 200 ),\
+  flavour_fr VARCHAR ( 200 ),\
+  characteristics_en VARCHAR ( 200 ),\
+  characteristics_fr VARCHAR ( 200 ),\
+  ripening_en VARCHAR ( 50 ),\
+  ripening_fr VARCHAR ( 50 ),\
+  organic BOOLEAN,\
+  category_type_en VARCHAR ( 50 ),\
+  category_type_fr VARCHAR ( 50 ),\
+  milk_type_en VARCHAR ( 50 ),\
+  milk_type_fr VARCHAR ( 50 ),\
+  milk_treatmentType_en VARCHAR ( 20 ),\
+  milk_treatmentType_fr VARCHAR ( 20 ),\
+  rind_type_en VARCHAR ( 20 ),\
+  rind_type_fr VARCHAR ( 20 ),\
+  last_update_date DATE\
+);"
+
+  # These are the statments used for CRUD operations
+  _insertStatement = "\
+INSERT INTO cheese\
+(cheese_id,cheese_name_en,cheese_name_fr,manufacturer_name_en,manufacturer_name_fr,\
+manufacturer_prov_code,manufacturing_type_en,manufacturing_type_fr,website_en,website_fr,\
+fat_content_percent,moisture_percent,particularities_en,particularities_fr,flavour_en,\
+flavour_fr,characteristics_en,characteristics_fr,ripening_en,ripening_fr,\
+organic,category_type_en,category_type_fr,milk_type_en,milk_type_fr,\
+milk_treatmentType_en,milk_treatmentType_fr,rind_type_en,rind_type_fr,last_update_date)\
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, \
+%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
+
+  _selectStatement =\
+"SELECT * FROM cheese WHERE cheese_id = %s"
+
+  _deleteStatement = \
+"DELETE FROM cheese WHERE cheese_id = %s"
+
+  _updateStatement ="\
+UPDATE cheese SET \
+cheese_name_en = %s, cheese_name_fr = %s, \
+manufacturer_name_en = %s, manufacturer_name_fr = %s, manufacturer_prov_code = %s, \
+manufacturing_type_en = %s, manufacturing_type_fr = %s, website_en = %s,\
+website_fr = %s, fat_content_percent = %s, moisture_percent = %s,\
+particularities_en = %s, particularities_fr = %s, flavour_en = %s,\
+flavour_fr = %s, characteristics_en = %s, characteristics_fr = %s, \
+ripening_en = %s, ripening_fr = %s, organic = %s, \
+category_type_en = %s, category_type_fr = %s, milk_type_en = %s, \
+milk_type_fr = %s, milk_treatmentType_en = %s, milk_treatmentType_fr = %s, \
+rind_type_en = %s, rind_type_fr = %s, last_update_date = %s \
+WHERE cheese_id = %s"
+
+  _truncateStatement = "TRUNCATE TABLE cheese"
 
   def __init__(self):
     "Connects to the DB and ensures that the table exists"
+    self.toInsert = []
+  
+  def rebuildTable(self):
     # When the CheeseDAO is created it connects to the DB
     # and checks to see if the table exists, and creates it if it doesn't
     DB = mysql.connector.connect(**CheeseDAO._connectionData) 
-    tableExistsCursor = DB.cursor()
-    tableExistsCursor.execute("SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'cheese'")
-    if tableExistsCursor.fetchone()[0] == 0:
-      self.recreateTable()
-    tableExistsCursor.close()
+    cursor = DB.cursor()
+    cursor.execute(CheeseDAO._createTableStatement)
+    cursor.close()
     DB.close()
 
-  def recreateTable(self):
-    "Drops the cheese table and creates it again"
-    DB = mysql.connector.connect(**CheeseDAO._connectionData)
-    createTableCursor = DB.cursor()
-    createTableSQL = open("resources/cheeseDirectoryDDL.sql").read()
-    createTableCursor.execute(createTableSQL)
-    createTableCursor.close()
-    DB.close()
-
-  def insertCheese(self, cheese):
+  def insert(self, cheese):
     "Inserts a cheese into the DB"
-    input("Inserting")
     DB = mysql.connector.connect(**CheeseDAO._connectionData)
     insertCursor = DB.cursor()
     insertCursor.execute(CheeseDAO._insertStatement, tuple(self._getListOfFields(cheese)))
     DB.commit()
     insertCursor.close()
     DB.close()
+  
+  def insertLater(self, cheese):
+    "Puts a cheese into a list of cheeses to be added en mass later"
+    self.toInsert.append(tuple(self._getListOfFields(cheese)))
+  
+  def insertAll(self):
+    "Inserts all cheeses added via insertLater into the DB"
+    DB = mysql.connector.connect(**CheeseDAO._connectionData)
+    cursor = DB.cursor()
+    cursor.executemany(CheeseDAO._insertStatement, self.toInsert)
+    DB.commit()
+    cursor.close()
+    DB.close()
 
-  def getCheese(self, id):
+  def get(self, id):
     "Fetches a cheese from the DB and returns it"
     DB = mysql.connector.connect(**CheeseDAO._connectionData)
     getCursor = DB.cursor()
@@ -64,7 +131,7 @@ class CheeseDAO:
     DB.close()
     return self._rowIntoCheese(row) if row != None else None
 
-  def getAllCheeses(self):
+  def getAll(self):
     "Fetch all cheeses in the DB and returns a list of them"
     cheeseList = []
     DB = mysql.connector.connect(**CheeseDAO._connectionData)
@@ -77,19 +144,18 @@ class CheeseDAO:
     DB.close()
     return cheeseList
 
-  def updateCheese(self, cheese):
+  def update(self, cheese):
     "Updates a cheese in the DB"
     DB = mysql.connector.connect(**CheeseDAO._connectionData)
     updateCursor = DB.cursor()
-    fieldList = self._getListOfFields(cheese)
-    fieldList.remove(cheese.CheeseId)
+    fieldList = self._getListOfFields(cheese)[1:]
     fieldList.append(cheese.CheeseId)
     updateCursor.execute(CheeseDAO._updateStatement, tuple(fieldList))
     DB.commit()
     updateCursor.close()
     DB.close()
   
-  def deleteCheese(self, id):
+  def delete(self, id):
     "Deletes a cheese from the DB"
     DB = mysql.connector.connect(**CheeseDAO._connectionData)
     deleteCursor = DB.cursor()
@@ -100,12 +166,11 @@ class CheeseDAO:
     DB.close()
     return toRet
 
-  def truncateCheese(self):
+  def truncate(self):
     "Empties the DB of all cheeses"
-    truncateStatement = "TRUNCATE TABLE cheese"
     DB = mysql.connector.connect(**CheeseDAO._connectionData)
     deleteCursor = DB.cursor()
-    deleteCursor.execute(truncateStatement)
+    deleteCursor.execute(CheeseDAO._truncateStatement)
     DB.commit()
     toRet = deleteCursor.rowcount > 0
     deleteCursor.close()
@@ -134,7 +199,7 @@ class CheeseDAO:
     cheese.CharacteristicsFR = row[17]
     cheese.RipeningEN = row[18]
     cheese.RipeningFR = row[19]
-    cheese.Organic = row[20]
+    cheese.Organic = row[20] == "1"
     cheese.CategoryTypeEN = row[21]
     cheese.CategoryTypeFR = row[22]
     cheese.MilkTypeEN = row[23]
