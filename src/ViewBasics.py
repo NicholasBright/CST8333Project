@@ -132,7 +132,6 @@ class ListPage (LoopingPage):
     if self.displayList.__len__() == 0:
       self.mainLines = ["None to show"]
       self.acceptLine = "Press any key to continue"
-      self.quit()
       return
     while \
       (displayedCount < self.itemsPerPage) and \
@@ -202,9 +201,6 @@ class EditorPage(ListPage):
     if self.displayList[(self.editingItem+((self.currentPage-1)*self.itemsPerPage))] == key:
       return (str(key) + ":" + self.editLine + "_")
     return str(key) + ":" + str(self.editingObject.__getattribute__(key))
-
-  def populateLines(self):
-    super().populateLines()
   
   def enterEditing(self, attr):
     key = self.displayList[(self.selectedItem-1+((self.currentPage-1)*self.itemsPerPage))]
@@ -252,6 +248,100 @@ class EditorPage(ListPage):
     if key in self.testValidDict:
       return self.testValidDict[key](value)
     return True
+
+class SearchListPage(ListPage):
+  def __init__(self, searchList=[], filterOnInput = False, itemsPerPage=10, formatter=lambda item: item.__str__(), selectAction=None, headerLines = [], acceptLine = "Type in search terms, Press enter to select list items, press Escape to quit"):
+    self.searching = True
+    self.filterOnInput = filterOnInput
+    super().__init__(displayList=searchList, itemsPerPage=itemsPerPage,formatter=formatter, selectAction=selectAction, headerLines=headerLines, acceptLine=acceptLine)
+    self.searchList = searchList.copy()
+    self.selectedItem = -1
+    self.searchLine = ""
+  
+  def populateLines(self):
+    super().populateLines()
+    self.footerLines.append("")
+    self.footerLines.append("Search format: [AttributeName]:[Value]")
+    self.footerLines.append("Multiple terms can be specified, separate then by spaces")
+    self.footerLines.append("Use double quotes if [Value] contains spaces")
+    self.footerLines.append("Search: " + self.searchLine)
+
+  def processInput(self):
+    if (self.acceptValue == "ESCAPE") and (not self.searching):
+      self.searching = True
+      self.selectedItem = -1
+    elif self.searching:
+      if self.acceptValue == "ENTER":
+        self.filterList()
+        self.searching = False
+        self.selectedItem = 1
+        self.currentPage = 1
+      elif self.acceptValue == "ESCAPE":
+        self.quit()
+      elif self.acceptValue == "BACKSPACE":
+        if self.searchLine != "":
+          self.searchLine = self.searchLine[:-1]
+          if self.filterOnInput:
+            self.filterList()
+      elif isCharacter(self.acceptValue):
+        self.searchLine += self.acceptValue
+        if self.filterOnInput:
+          self.filterList()
+    else:
+      super().processInput()
+  
+  def filterList(self):
+    if self.searchList.__len__() == 0:
+      return
+    example = self.searchList[0]
+    attrValueList = []
+    for term in self.parseSearchList():
+      if term.__contains__(":"):
+        termParts = term.split(":")
+        key = termParts[0]
+        value = termParts[1]
+        if key in example.__dict__:
+          attrValueList.append((key,value))
+        else:
+          self.informLine += "Search term \""+key+"\" is not valid. "
+      else:
+        self.informLine += "Invalid Search Format"
+    foundList = []
+    for item in self.searchList:
+      valid = True
+      for term in attrValueList:
+        if not str(item.__getattribute__(term[0])).__contains__(term[1]):
+          valid = False
+          break
+      if valid:
+        foundList.append(item)
+    self.displayList = foundList
+  
+  def parseSearchList(self):
+    "CheeseId:219 CheeseNameEN:\"Goat Cheese\""
+    refinedList = []
+    splitList = self.searchLine.split(" ")
+    finalLine = ""
+    inAQuote = False
+    for item in splitList:
+      if item.__contains__("\""):
+        if inAQuote:
+          inAQuote = False
+          finalLine += item
+          refinedList.append(finalLine.replace("\"",""))
+        else:
+          if item.count("\"") == 1:
+            inAQuote = True
+            finalLine = item + " "
+          else:
+            refinedList.append(item.replace("\"",""))
+      elif not inAQuote:
+        refinedList.append(item)
+      else:
+        finalLine += item + " "
+    if inAQuote:
+      self.informLine += "Unclosed quote. "
+    return refinedList
 
 class YesNoPage(LoopingPage):
   def __init__(self, headerLines = [], messages = [], acceptLine = "Confirm? (Y/N)"):

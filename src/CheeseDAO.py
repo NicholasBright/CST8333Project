@@ -88,6 +88,7 @@ WHERE cheese_id = %s"
   def __init__(self):
     "Connects to the DB and ensures that the table exists"
     self.toInsert = []
+    self.DB = mysql.connector.connect(**CheeseDAO._connectionData)
   
   def rebuildTable(self):
     # When the CheeseDAO is created it connects to the DB
@@ -100,12 +101,12 @@ WHERE cheese_id = %s"
 
   def insert(self, cheese):
     "Inserts a cheese into the DB"
-    DB = mysql.connector.connect(**CheeseDAO._connectionData)
-    insertCursor = DB.cursor()
+    #DB = mysql.connector.connect(**CheeseDAO._connectionData)
+    insertCursor = self.DB.cursor()
     insertCursor.execute(CheeseDAO._insertStatement, tuple(self._getListOfFields(cheese)))
-    DB.commit()
+    self.DB.commit()
     insertCursor.close()
-    DB.close()
+    #DB.close()
   
   def insertLater(self, cheese):
     "Puts a cheese into a list of cheeses to be added en mass later"
@@ -113,68 +114,68 @@ WHERE cheese_id = %s"
   
   def insertAll(self):
     "Inserts all cheeses added via insertLater into the DB"
-    DB = mysql.connector.connect(**CheeseDAO._connectionData)
-    cursor = DB.cursor()
+    #DB = mysql.connector.connect(**CheeseDAO._connectionData)
+    cursor = self.DB.cursor()
     cursor.executemany(CheeseDAO._insertStatement, self.toInsert)
-    DB.commit()
+    self.DB.commit()
     cursor.close()
-    DB.close()
+    #DB.close()
 
   def get(self, id):
     "Fetches a cheese from the DB and returns it"
-    DB = mysql.connector.connect(**CheeseDAO._connectionData)
-    getCursor = DB.cursor()
+    #DB = mysql.connector.connect(**CheeseDAO._connectionData)
+    getCursor = self.DB.cursor()
     selectStatement = CheeseDAO._selectStatement
     getCursor.execute(selectStatement, (id,))
     row = getCursor.fetchone()
     getCursor.close()
-    DB.close()
+    #DB.close()
     return self._rowIntoCheese(row) if row != None else None
 
   def getAll(self):
     "Fetch all cheeses in the DB and returns a list of them"
     cheeseList = []
-    DB = mysql.connector.connect(**CheeseDAO._connectionData)
-    getAllCursor = DB.cursor()
+    #DB = mysql.connector.connect(**CheeseDAO._connectionData)
+    getAllCursor = self.DB.cursor()
     selectStatement = "SELECT * FROM cheese"
     getAllCursor.execute(selectStatement)
     for row in getAllCursor:
       cheeseList.append(self._rowIntoCheese(row))
     getAllCursor.close()
-    DB.close()
+    #DB.close()
     return cheeseList
 
   def update(self, cheese):
     "Updates a cheese in the DB"
-    DB = mysql.connector.connect(**CheeseDAO._connectionData)
-    updateCursor = DB.cursor()
+    #DB = mysql.connector.connect(**CheeseDAO._connectionData)
+    updateCursor = self.DB.cursor()
     fieldList = self._getListOfFields(cheese)[1:]
     fieldList.append(cheese.CheeseId)
     updateCursor.execute(CheeseDAO._updateStatement, tuple(fieldList))
-    DB.commit()
+    self.DB.commit()
     updateCursor.close()
-    DB.close()
+    #DB.close()
   
   def delete(self, id):
     "Deletes a cheese from the DB"
-    DB = mysql.connector.connect(**CheeseDAO._connectionData)
-    deleteCursor = DB.cursor()
+    #DB = mysql.connector.connect(**CheeseDAO._connectionData)
+    deleteCursor = self.DB.cursor()
     deleteCursor.execute(CheeseDAO._deleteStatement, (id,))
-    DB.commit()
+    self.DB.commit()
     toRet = deleteCursor.rowcount > 0
     deleteCursor.close()
-    DB.close()
+    #DB.close()
     return toRet
 
   def truncate(self):
     "Empties the DB of all cheeses"
-    DB = mysql.connector.connect(**CheeseDAO._connectionData)
-    deleteCursor = DB.cursor()
+    #DB = mysql.connector.connect(**CheeseDAO._connectionData)
+    deleteCursor = self.DB.cursor()
     deleteCursor.execute(CheeseDAO._truncateStatement)
-    DB.commit()
+    self.DB.commit()
     toRet = deleteCursor.rowcount > 0
     deleteCursor.close()
-    DB.close()
+    #DB.close()
     return toRet
 
   def _rowIntoCheese(self, row):

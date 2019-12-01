@@ -5,7 +5,7 @@ import datetime
 import math
 from os import system, name
 import re
-from ViewBasics import Menu, Page, LoopingPage, ListPage, YesNoPage, EditorPage
+from ViewBasics import Menu, Page, LoopingPage, ListPage, YesNoPage, EditorPage, SearchListPage
 
 cheeseHeader = [
   "Nicholas Bright"
@@ -50,7 +50,6 @@ class MainMenu (Menu):
     "Initiates the main menu with options for the program"
     optionDict = {
       "Data Options":self.DataOptions,
-      "Save data to file":self.saveDataToFile,
       "Display records":self.displayRecords,
       "Create new cheese":self.createNewCheese,
       "View Cheese Info":self.cheeseInfo,
@@ -62,17 +61,13 @@ class MainMenu (Menu):
     "Navigate to the data options menu"
     DataOptionsMenu().draw()
 
-  def saveDataToFile(self):
-    "Draws the SaveDataToFilePage"
-    SaveDataToFilePage().draw()
-
   def displayRecords(self):
     "Draws the DisplayCheeseListPage"
     DisplayCheeseListPage().draw()
 
   def createNewCheese(self):
     "Creates a cheese info page on a new cheese"
-    CheeseInfoPage(CheeseModel()).draw()
+    EditCheesePage(CheeseModel()).draw()
 
 
   def cheeseInfo(self):
@@ -87,9 +82,10 @@ class DataOptionsMenu(Menu):
   def __init__(self):
     optionDict = {
       "Reload Dataset":self.reloadDataset,
-      "Truncate the table":self.truncateTable
+      "Truncate the table":self.truncateTable,
+      "Save data to file":self.saveDataToFile
     }
-    super(DataOptionsMenu,self).__init__(headerLines=cheeseHeader, optionDict=optionDict)
+    super().__init__(headerLines=cheeseHeader, optionDict=optionDict)
   
   def reloadDataset(self):
     ReloadDatasetPage().draw()
@@ -97,6 +93,10 @@ class DataOptionsMenu(Menu):
   def truncateTable(self):
     DAO.truncate()
     self.informLine = "Table truncated"
+
+  def saveDataToFile(self):
+    "Draws the SaveDataToFilePage"
+    SaveDataToFilePage().draw()
 
 class ReloadDatasetPage(ListPage):
   "A page to get input from the user about which file to load and fill the DB with"
@@ -109,7 +109,7 @@ class ReloadDatasetPage(ListPage):
     truncate.draw()
     if truncate.acceptValue:
       DAO.truncate()
-    dataLoader.readCheeseFile(item, 200)
+    dataLoader.readCheeseFile(item)
     self.quit()
 
 class TryAgainPage(LoopingPage):
@@ -126,11 +126,11 @@ class TryAgainPage(LoopingPage):
     else:
       self.informLine = "Enter Y or N"
 
-class DisplayCheeseListPage (ListPage):
+class DisplayCheeseListPage (SearchListPage):
   "Displays the list of all cheeses from the DB"
   def __init__(self):
     "Initializes the DisplayCheeseListPage"
-    super().__init__(displayList=DAO.getAll(), headerLines = cheeseHeader, formatter=getCheeseSummaryInfo, selectAction=self.displaySummaryOfCheese)
+    super().__init__(searchList=DAO.getAll(), headerLines = cheeseHeader, formatter=getCheeseSummaryInfo, selectAction=self.displaySummaryOfCheese)
 
   def displaySummaryOfCheese(self, cheese):
     CheeseInfoPage(cheese).draw()
@@ -156,48 +156,57 @@ class CheeseInfoPage (YesNoPage):
   def processInput(self):
     super().processInput()
     if self.acceptValue == True:
-      verifyValuesDict = {
-        "CheeseId": lambda a: False,
-        "CheeseNameEN": lambda a: a.__len__() <= 100,
-        "CheeseNameFR": lambda a: a.__len__() <= 100,
-        "ManufacturerNameEN": lambda a: a.__len__() <= 50,
-        "ManufacturerNameFR": lambda a: a.__len__() <= 50,
-        "ManufacturerProvCode": lambda a: a.__len__() <= 2,
-        "ManufacturingTypeEN": lambda a: a.__len__() <= 50,
-        "ManufacturingTypeFR": lambda a: a.__len__() <= 50,
-        "WebSiteEN": lambda a: a.__len__() <= 100,
-        "WebSiteFR": lambda a: a.__len__() <= 100,
-        "FatContentPercent": lambda a: re.match("^\\d+(\\.\\d+)*$", a) != None,
-        "MoisturePercent": lambda a: re.match("^\\d+(\\.\\d+)*$", a) != None,
-        "ParticularitiesEN": lambda a: a.__len__() <= 200,
-        "ParticularitiesFR": lambda a: a.__len__() <= 200,
-        "FlavourEN": lambda a: a.__len__() <= 200,
-        "FlavourFR": lambda a: a.__len__() <= 200,
-        "CharacteristicsEN": lambda a: a.__len__() <= 200,
-        "CharacteristicsFR": lambda a: a.__len__() <= 200,
-        "RipeningEN": lambda a: a.__len__() <= 50,
-        "RipeningFR": lambda a: a.__len__() <= 50,
-        "CategoryTypeEN": lambda a: a.__len__() <= 50,
-        "CategoryTypeFR": lambda a: a.__len__() <= 50,
-        "MilkTypeEN": lambda a: a.__len__() <= 50,
-        "MilkTypeFR": lambda a: a.__len__() <= 50,
-        "MilkTreatmentTypeEN": lambda a: a.__len__() <= 20,
-        "MilkTreatmentTypeFR": lambda a: a.__len__() <= 20,
-        "RindTypeEN": lambda a: a.__len__() <= 20,
-        "RindTypeFR": lambda a: a.__len__() <= 20,
-        "LastUpdateDate": lambda a: re.match("^\\d{4}-\\d{2}-\\d{2}$", a) != None
-      }
-      formatDict = {
-        "LastUpdateDate": lambda a: datetime.datetime.strptime(a,"%Y-%m-%d").date()
-      }
-      EditorPage(editingObject=self.cheese,headerLines=cheeseHeader, testValidDict=verifyValuesDict, formatDict=formatDict).draw()
-      saveCheesePage = YesNoPage(headerLines=cheeseHeader, acceptLine="Would you like to save your changes? (Y/N)")
-      saveCheesePage.draw()
-      if saveCheesePage.acceptValue:
-        if self.cheese.CheeseId == None:
-          DAO.insert(self.cheese)
-        else:
-          DAO.update(self.cheese)
+      EditCheesePage(self.cheese).draw()
+
+class EditCheesePage(EditorPage):
+  def __init__(self, cheese):
+    self.cheese = cheese
+    verifyValuesDict = {
+      "CheeseId": lambda a: False,
+      "CheeseNameEN": lambda a: a.__len__() <= 100,
+      "CheeseNameFR": lambda a: a.__len__() <= 100,
+      "ManufacturerNameEN": lambda a: a.__len__() <= 50,
+      "ManufacturerNameFR": lambda a: a.__len__() <= 50,
+      "ManufacturerProvCode": lambda a: a.__len__() <= 2,
+      "ManufacturingTypeEN": lambda a: a.__len__() <= 50,
+      "ManufacturingTypeFR": lambda a: a.__len__() <= 50,
+      "WebSiteEN": lambda a: a.__len__() <= 100,
+      "WebSiteFR": lambda a: a.__len__() <= 100,
+      "FatContentPercent": lambda a: re.match("^\\d+(\\.\\d+)*$", a) != None,
+      "MoisturePercent": lambda a: re.match("^\\d+(\\.\\d+)*$", a) != None,
+      "ParticularitiesEN": lambda a: a.__len__() <= 200,
+      "ParticularitiesFR": lambda a: a.__len__() <= 200,
+      "FlavourEN": lambda a: a.__len__() <= 200,
+      "FlavourFR": lambda a: a.__len__() <= 200,
+      "CharacteristicsEN": lambda a: a.__len__() <= 200,
+      "CharacteristicsFR": lambda a: a.__len__() <= 200,
+      "RipeningEN": lambda a: a.__len__() <= 50,
+      "RipeningFR": lambda a: a.__len__() <= 50,
+      "CategoryTypeEN": lambda a: a.__len__() <= 50,
+      "CategoryTypeFR": lambda a: a.__len__() <= 50,
+      "MilkTypeEN": lambda a: a.__len__() <= 50,
+      "MilkTypeFR": lambda a: a.__len__() <= 50,
+      "MilkTreatmentTypeEN": lambda a: a.__len__() <= 20,
+      "MilkTreatmentTypeFR": lambda a: a.__len__() <= 20,
+      "RindTypeEN": lambda a: a.__len__() <= 20,
+      "RindTypeFR": lambda a: a.__len__() <= 20,
+      "LastUpdateDate": lambda a: re.match("^\\d{4}-\\d{2}-\\d{2}$", a) != None
+    }
+    formatDict = {
+      "LastUpdateDate": lambda a: datetime.datetime.strptime(a,"%Y-%m-%d").date()
+    }
+    super().__init__(editingObject=cheese,headerLines=cheeseHeader, testValidDict=verifyValuesDict, formatDict=formatDict)
+
+  def quit(self):
+    super().quit()
+    saveCheesePage = YesNoPage(headerLines=cheeseHeader, acceptLine="Would you like to save your changes? (Y/N)")
+    saveCheesePage.draw()
+    if saveCheesePage.acceptValue:
+      if self.cheese.CheeseId == None:
+        DAO.insert(self.cheese)
+      else:
+        DAO.update(self.cheese)
+
 
 class FindCheesePage(EditorPage):
   def __init__(self):

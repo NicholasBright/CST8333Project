@@ -32,8 +32,8 @@ class CheeseDataLoader:
         elif dataReader.line_num == 1:
           pass
         else:
-          self.cheeseDAO.insertLater(self.convertRowToCheese(row))
           recordsRead += 1
+          self.cheeseDAO.insertLater(self.convertRowToCheese(row))
       self.cheeseDAO.insertAll()
 
   def convertRowToCheese (self, row):
@@ -87,63 +87,63 @@ class CheeseDataLoader:
     "Turns a cheese into a csv value string"
     cheeseStr = ""
     separator = ","
-    cheeseStr += "" if cheese.CheeseId == None else str(cheese.CheeseId)
+    cheeseStr += "" if cheese.CheeseId == None else "\"{0}\"".format(str(cheese.CheeseId).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.CheeseNameEN == None else str(cheese.CheeseNameEN)
+    cheeseStr += "" if cheese.CheeseNameEN == None else "\"{0}\"".format(str(cheese.CheeseNameEN).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.CheeseNameFR == None else str(cheese.CheeseNameFR)
+    cheeseStr += "" if cheese.CheeseNameFR == None else "\"{0}\"".format(str(cheese.CheeseNameFR).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.ManufacturerNameEN == None else str(cheese.ManufacturerNameEN)
+    cheeseStr += "" if cheese.ManufacturerNameEN == None else "\"{0}\"".format(str(cheese.ManufacturerNameEN).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.ManufacturerNameFR == None else str(cheese.ManufacturerNameFR)
+    cheeseStr += "" if cheese.ManufacturerNameFR == None else "\"{0}\"".format(str(cheese.ManufacturerNameFR).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.ManufacturerProvCode == None else str(cheese.ManufacturerProvCode)
+    cheeseStr += "" if cheese.ManufacturerProvCode == None else "\"{0}\"".format(str(cheese.ManufacturerProvCode).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.ManufacturingTypeEN == None else str(cheese.ManufacturingTypeEN)
+    cheeseStr += "" if cheese.ManufacturingTypeEN == None else "\"{0}\"".format(str(cheese.ManufacturingTypeEN).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.ManufacturingTypeFR == None else str(cheese.ManufacturingTypeFR)
+    cheeseStr += "" if cheese.ManufacturingTypeFR == None else "\"{0}\"".format(str(cheese.ManufacturingTypeFR).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.WebSiteEN == None else str(cheese.WebSiteEN)
+    cheeseStr += "" if cheese.WebSiteEN == None else "\"{0}\"".format(str(cheese.WebSiteEN).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.WebSiteFR == None else str(cheese.WebSiteFR)
+    cheeseStr += "" if cheese.WebSiteFR == None else "\"{0}\"".format(str(cheese.WebSiteFR).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.FatContentPercent == None else str(cheese.FatContentPercent)
+    cheeseStr += "" if cheese.FatContentPercent == None else "\"{0}\"".format(str(cheese.FatContentPercent).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.MoisturePercent == None else str(cheese.MoisturePercent)
+    cheeseStr += "" if cheese.MoisturePercent == None else "\"{0}\"".format(str(cheese.MoisturePercent).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.ParticularitiesEN == None else str(cheese.ParticularitiesEN)
+    cheeseStr += "" if cheese.ParticularitiesEN == None else "\"{0}\"".format(str(cheese.ParticularitiesEN).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.ParticularitiesFR == None else str(cheese.ParticularitiesFR)
+    cheeseStr += "" if cheese.ParticularitiesFR == None else "\"{0}\"".format(str(cheese.ParticularitiesFR).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.FlavourEN == None else str(cheese.FlavourEN)
+    cheeseStr += "" if cheese.FlavourEN == None else "\"{0}\"".format(str(cheese.FlavourEN).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.FlavourFR == None else str(cheese.FlavourFR)
+    cheeseStr += "" if cheese.FlavourFR == None else "\"{0}\"".format(str(cheese.FlavourFR).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.CharacteristicsEN == None else str(cheese.CharacteristicsEN)
+    cheeseStr += "" if cheese.CharacteristicsEN == None else "\"{0}\"".format(str(cheese.CharacteristicsEN).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.CharacteristicsFR == None else str(cheese.CharacteristicsFR)
+    cheeseStr += "" if cheese.CharacteristicsFR == None else "\"{0}\"".format(str(cheese.CharacteristicsFR).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.RipeningEN == None else str(cheese.RipeningEN)
+    cheeseStr += "" if cheese.RipeningEN == None else "\"{0}\"".format(str(cheese.RipeningEN).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.RipeningFR == None else str(cheese.RipeningFR)
+    cheeseStr += "" if cheese.RipeningFR == None else "\"{0}\"".format(str(cheese.RipeningFR).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.Organic == None else str(cheese.Organic)
+    cheeseStr += "" if cheese.Organic == None else "\"{0}\"".format(str(cheese.Organic).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.CategoryTypeEN == None else str(cheese.CategoryTypeEN)
+    cheeseStr += "" if cheese.CategoryTypeEN == None else "\"{0}\"".format(str(cheese.CategoryTypeEN).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.CategoryTypeFR == None else str(cheese.CategoryTypeFR)
+    cheeseStr += "" if cheese.CategoryTypeFR == None else "\"{0}\"".format(str(cheese.CategoryTypeFR).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.MilkTypeEN == None else str(cheese.MilkTypeEN)
+    cheeseStr += "" if cheese.MilkTypeEN == None else "\"{0}\"".format(str(cheese.MilkTypeEN).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.MilkTypeFR == None else str(cheese.MilkTypeFR)
+    cheeseStr += "" if cheese.MilkTypeFR == None else "\"{0}\"".format(str(cheese.MilkTypeFR).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.MilkTreatmentTypeEN == None else str(cheese.MilkTreatmentTypeEN)
+    cheeseStr += "" if cheese.MilkTreatmentTypeEN == None else "\"{0}\"".format(str(cheese.MilkTreatmentTypeEN).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.MilkTreatmentTypeFR == None else str(cheese.MilkTreatmentTypeFR)
+    cheeseStr += "" if cheese.MilkTreatmentTypeFR == None else "\"{0}\"".format(str(cheese.MilkTreatmentTypeFR).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.RindTypeEN == None else str(cheese.RindTypeEN)
+    cheeseStr += "" if cheese.RindTypeEN == None else "\"{0}\"".format(str(cheese.RindTypeEN).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.RindTypeFR == None else str(cheese.RindTypeFR)
+    cheeseStr += "" if cheese.RindTypeFR == None else "\"{0}\"".format(str(cheese.RindTypeFR).replace("\"","\"\""))
     cheeseStr += separator
-    cheeseStr += "" if cheese.LastUpdateDate == None else str(cheese.LastUpdateDate)
+    cheeseStr += "" if cheese.LastUpdateDate == None else "\"{0}\"".format(str(cheese.LastUpdateDate).replace("\"","\"\""))
     return cheeseStr.replace("\n","")
