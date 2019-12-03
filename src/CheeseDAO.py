@@ -1,9 +1,17 @@
+'''
+Author: Nicholas Bright
+Created Date: 2019-10-20
+Last Updated: 2019-12-03
+Version: 1.0.0
+Purpose:
+Defines a class used to access a cheese table in a mysql database
+'''
 from CheeseModel import CheeseModel
 import mysql.connector
 import time
 
 class CheeseDAO:
-  "An object for managing data access to cheese"
+  """A DataAccessObject for accessing and executing on the cheese DB"""
 
   instance = None
 
@@ -12,7 +20,8 @@ class CheeseDAO:
     'host':"localhost",
     'user':"cst8333",
     'passwd':"piedas",
-    'database':"cst8333"
+    'database':"cst8333",
+    'auth_plugin':'mysql_native_password'
   }
 
   # Create table statement
@@ -66,8 +75,14 @@ VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, \
   _selectStatement =\
 "SELECT * FROM cheese WHERE cheese_id = %s"
 
+  _selectAllStatement =\
+"SELECT * FROM cheese"
+
   _deleteStatement = \
 "DELETE FROM cheese WHERE cheese_id = %s"
+
+  _deleteAllStatement = \
+"DELETE FROM cheese"
 
   _updateStatement ="\
 UPDATE cheese SET \
@@ -83,103 +98,81 @@ milk_type_fr = %s, milk_treatmentType_en = %s, milk_treatmentType_fr = %s, \
 rind_type_en = %s, rind_type_fr = %s, last_update_date = %s \
 WHERE cheese_id = %s"
 
-  _truncateStatement = "TRUNCATE TABLE cheese"
-
   def __init__(self):
-    "Connects to the DB and ensures that the table exists"
+    """Establishs a connection to the DB"""
     self.toInsert = []
     self.DB = mysql.connector.connect(**CheeseDAO._connectionData)
-  
-  def rebuildTable(self):
-    # When the CheeseDAO is created it connects to the DB
-    # and checks to see if the table exists, and creates it if it doesn't
-    DB = mysql.connector.connect(**CheeseDAO._connectionData) 
-    cursor = DB.cursor()
-    cursor.execute(CheeseDAO._createTableStatement)
-    cursor.close()
-    DB.close()
 
   def insert(self, cheese):
-    "Inserts a cheese into the DB"
-    #DB = mysql.connector.connect(**CheeseDAO._connectionData)
-    insertCursor = self.DB.cursor()
-    insertCursor.execute(CheeseDAO._insertStatement, tuple(self._getListOfFields(cheese)))
+    """Inserts a cheese into the DB
+    cheese - The cheese to insert to the DB"""
+    cursor = self.DB.cursor()
+    cursor.execute(CheeseDAO._insertStatement, tuple(self._getListOfFields(cheese)))
     self.DB.commit()
-    insertCursor.close()
-    #DB.close()
+    cursor.close()
   
   def insertLater(self, cheese):
-    "Puts a cheese into a list of cheeses to be added en mass later"
+    """Puts a cheese into a list of cheeses to be added en mass later.
+    cheese - The cheese to add to the list of cheeses to insert later"""
     self.toInsert.append(tuple(self._getListOfFields(cheese)))
   
   def insertAll(self):
-    "Inserts all cheeses added via insertLater into the DB"
-    #DB = mysql.connector.connect(**CheeseDAO._connectionData)
+    """Inserts all cheeses added via insertLater into the DB"""
     cursor = self.DB.cursor()
     cursor.executemany(CheeseDAO._insertStatement, self.toInsert)
+    self.toInsert.clear()
     self.DB.commit()
     cursor.close()
-    #DB.close()
 
   def get(self, id):
-    "Fetches a cheese from the DB and returns it"
-    #DB = mysql.connector.connect(**CheeseDAO._connectionData)
-    getCursor = self.DB.cursor()
-    selectStatement = CheeseDAO._selectStatement
-    getCursor.execute(selectStatement, (id,))
-    row = getCursor.fetchone()
-    getCursor.close()
-    #DB.close()
+    """Fetches a cheese from the DB and returns it
+    id - The ID of the cheese to get"""
+    cursor = self.DB.cursor()
+    cursor.execute(CheeseDAO._selectStatement, (id,))
+    row = cursor.fetchone()
+    cursor.close()
     return self._rowIntoCheese(row) if row != None else None
 
   def getAll(self):
-    "Fetch all cheeses in the DB and returns a list of them"
+    """Fetches all cheeses in the DB and returns a list of them"""
     cheeseList = []
-    #DB = mysql.connector.connect(**CheeseDAO._connectionData)
-    getAllCursor = self.DB.cursor()
-    selectStatement = "SELECT * FROM cheese"
-    getAllCursor.execute(selectStatement)
-    for row in getAllCursor:
+    cursor = self.DB.cursor()
+    cursor.execute(CheeseDAO._selectAllStatement)
+    for row in cursor:
       cheeseList.append(self._rowIntoCheese(row))
-    getAllCursor.close()
-    #DB.close()
     return cheeseList
 
   def update(self, cheese):
-    "Updates a cheese in the DB"
-    #DB = mysql.connector.connect(**CheeseDAO._connectionData)
-    updateCursor = self.DB.cursor()
+    """Updates a cheese in the DB"""
+    #_getListOfFields has CheeseID at the start since it was built for 
+    # insert cheese not update.
+    #To remedy this I get the sublist of fields from the 2nd item to the end
+    # and the CheeseId to the end
     fieldList = self._getListOfFields(cheese)[1:]
     fieldList.append(cheese.CheeseId)
-    updateCursor.execute(CheeseDAO._updateStatement, tuple(fieldList))
+    cursor = self.DB.cursor()
+    cursor.execute(CheeseDAO._updateStatement, tuple(fieldList))
     self.DB.commit()
-    updateCursor.close()
-    #DB.close()
+    cursor.close()
   
   def delete(self, id):
-    "Deletes a cheese from the DB"
-    #DB = mysql.connector.connect(**CheeseDAO._connectionData)
-    deleteCursor = self.DB.cursor()
-    deleteCursor.execute(CheeseDAO._deleteStatement, (id,))
+    """Deletes a cheese from the DB"""
+    cursor = self.DB.cursor()
+    cursor.execute(CheeseDAO._deleteStatement, (id,))
     self.DB.commit()
-    toRet = deleteCursor.rowcount > 0
-    deleteCursor.close()
-    #DB.close()
+    toRet = cursor.rowcount > 0
+    cursor.close()
     return toRet
-
-  def truncate(self):
-    "Empties the DB of all cheeses"
-    #DB = mysql.connector.connect(**CheeseDAO._connectionData)
-    deleteCursor = self.DB.cursor()
-    deleteCursor.execute(CheeseDAO._truncateStatement)
+  
+  def deleteAll(self):
+    """Deletes all data from the cheese table"""
+    cursor = self.DB.cursor()
+    cursor.execute(CheeseDAO._deleteAllStatement)
     self.DB.commit()
-    toRet = deleteCursor.rowcount > 0
-    deleteCursor.close()
-    #DB.close()
-    return toRet
+    cursor.close()
 
   def _rowIntoCheese(self, row):
-    "Turns a row from the DB into a cheese"
+    """Turns a row from the DB into a cheese"""
     cheese = CheeseModel(row[0])
     cheese.CheeseNameEN = row[1]
     cheese.CheeseNameFR = row[2]
@@ -213,7 +206,7 @@ WHERE cheese_id = %s"
     return cheese
 
   def _getListOfFields(self, cheese):
-    "Turns a cheese into a list of it's values"
+    """Turns a cheese into a list of it's values"""
     return [
       cheese.CheeseId,
       cheese.CheeseNameEN,

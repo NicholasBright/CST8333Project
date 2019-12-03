@@ -1,11 +1,21 @@
+'''
+Author: Nicholas Bright
+Created Date: 2019-10-20
+Last Updated: 2019-12-03
+Version: 1.0.0
+Purpose:
+Defines a series of classes that implement various pages from ViewBasics.py.
+These classes each have their own purposes within the mangement of cheese data
+however they all revolve around CRUD for the canadian cheese directory.
+'''
+
 from CheeseDAO import CheeseDAO
 from CheeseDataLoader import CheeseDataLoader
 from CheeseModel import CheeseModel
 import datetime
-import math
-from os import system, name
 import re
-from ViewBasics import Menu, Page, LoopingPage, ListPage, YesNoPage, EditorPage, SearchListPage
+from mysql.connector.errors import IntegrityError
+from ViewBasics import Menu, ListPage, EditorPage, YesNoPage, SearchListPage, InputPage
 
 cheeseHeader = [
   "Nicholas Bright"
@@ -15,7 +25,7 @@ DAO = CheeseDAO.instance
 dataLoader = CheeseDataLoader()
 
 def getCheeseSummaryInfo(cheese):
-  "Creates a string summarizing the info the the passed cheese"
+  """Creates a string summarizing the info the the passed cheese"""
   return (str(cheese.CheeseId) + ": " + 
     ("Unknown" if cheese.CheeseNameEN == None else cheese.CheeseNameEN) 
     + " made by " + 
@@ -26,7 +36,7 @@ def getCheeseSummaryInfo(cheese):
     ("Unknown" if cheese.ManufacturingTypeEN == None else cheese.ManufacturingTypeEN))
   
 def getLongformCheeseLines(cheese):
-  "Creates an array of strings based on the passed cheese containing all cheese info"
+  """Creates an array of strings based on the passed cheese containing all cheese info"""
   lines = []
   lines.append(getCheeseSummaryInfo(cheese))
   lines.append("WebSite: " + ("Unknown" if cheese.WebSiteEN == None else cheese.WebSiteEN))
@@ -45,9 +55,9 @@ def getLongformCheeseLines(cheese):
   return lines
 
 class MainMenu (Menu):
-  "A main menu of the cheese program"
+  """A main menu of the cheese program"""
   def __init__(self):
-    "Initiates the main menu with options for the program"
+    """Initiates the main menu with options for the program"""
     optionDict = {
       "Data Options":self.DataOptions,
       "Display records":self.displayRecords,
@@ -55,88 +65,82 @@ class MainMenu (Menu):
       "View Cheese Info":self.cheeseInfo,
       "Remove a cheese":self.removeCheese
     }
-    Menu.__init__(self, headerLines=cheeseHeader, optionDict=optionDict, numberMainLines=True)
+    super().__init__(headerLines=cheeseHeader, optionDict=optionDict, numberMainLines=True)
   
   def DataOptions(self):
-    "Navigate to the data options menu"
+    """Navigate to the data options menu"""
     DataOptionsMenu().draw()
 
   def displayRecords(self):
-    "Draws the DisplayCheeseListPage"
+    """Draws the DisplayCheeseListPage"""
     DisplayCheeseListPage().draw()
 
   def createNewCheese(self):
-    "Creates a cheese info page on a new cheese"
+    """Creates a cheese info page on a new cheese"""
     EditCheesePage(CheeseModel()).draw()
 
-
   def cheeseInfo(self):
-    "Draws the CheeseInfoPage"
+    """Draws the CheeseInfoPage"""
     FindCheesePage().draw()
 
   def removeCheese(self):
-    "Drwas the RemoveCheesePage"
+    """Draws the RemoveCheesePage"""
     RemoveCheesePage().draw()
 
 class DataOptionsMenu(Menu):
+  """An implementation of Menu that gives a list of options regarding cheese data"""
   def __init__(self):
+    """Initializes a new DataOptionsMenu. Gives options to the user for reloading data from a file, clearing the table, and creating a new data file."""
     optionDict = {
       "Reload Dataset":self.reloadDataset,
-      "Truncate the table":self.truncateTable,
+      "Clear the table of data":self.clearTable,
       "Save data to file":self.saveDataToFile
     }
     super().__init__(headerLines=cheeseHeader, optionDict=optionDict)
   
   def reloadDataset(self):
+    """Creates a new ReloadDatasetPage and draws it"""
     ReloadDatasetPage().draw()
   
-  def truncateTable(self):
-    DAO.truncate()
-    self.informLine = "Table truncated"
+  def clearTable(self):
+    """Clears the database of all cheeses"""
+    DAO.deleteAll()
+    self.informLine = "Table cleared"
 
   def saveDataToFile(self):
-    "Draws the SaveDataToFilePage"
+    """Draws the SaveDataToFilePage"""
     SaveDataToFilePage().draw()
 
 class ReloadDatasetPage(ListPage):
-  "A page to get input from the user about which file to load and fill the DB with"
+  """A page to get input from the user about which file to load and fill the DB with"""
   def __init__(self):
-    "Initializes the ReloadDatasetPage"
+    """Initializes the ReloadDatasetPage"""
     super().__init__(displayList=dataLoader.getListOfDataFiles(), headerLines=cheeseHeader, selectAction=self.loadDataset)
   
   def loadDataset(self, item):
-    truncate = YesNoPage(["Do you wish to truncate the db before loading?"])
-    truncate.draw()
-    if truncate.acceptValue:
-      DAO.truncate()
-    dataLoader.readCheeseFile(item)
-    self.quit()
-
-class TryAgainPage(LoopingPage):
-  "A page to prompt the user if they want to try again"
-  def __init__(self, ErrorMessages = []):
-    "Initializes the TryAgainPage"
-    LoopingPage.__init__(self, headerLines = cheeseHeader, mainLines = ErrorMessages, acceptLine = "Try again? (Y/N) ")
-
-  def processInput(self):
-    "If the user enters valid input the page will quit, and the acepted value can be read to see the user's response"
-    if self.acceptValue.lower() in {"y", "n"}:
-      self.acceptValue = self.acceptValue.lower() == "y"
+    """Asks the user if they want to clear the table first, and then executes the delete (if they said yes) and loads data from the file"""
+    clearPage = YesNoPage(["Do you wish to delete all cheeses in the db before loading?"])
+    clearPage.draw()
+    if clearPage.acceptValue:
+      DAO.deleteAll()
+    try:
+      dataLoader.readCheeseFile(item)
       self.quit()
-    else:
-      self.informLine = "Enter Y or N"
+    except IntegrityError as e:
+      self.informLine = e.msg
 
 class DisplayCheeseListPage (SearchListPage):
-  "Displays the list of all cheeses from the DB"
+  """Displays the list of all cheeses from the DB"""
   def __init__(self):
     "Initializes the DisplayCheeseListPage"
     super().__init__(searchList=DAO.getAll(), headerLines = cheeseHeader, formatter=getCheeseSummaryInfo, selectAction=self.displaySummaryOfCheese)
 
   def displaySummaryOfCheese(self, cheese):
+    """Draws a cheese info page for a given cheese"""
     CheeseInfoPage(cheese).draw()
   
   def processInput(self):
-    super().processInput()
+    """If the user typed DELETE the selected cheese is deleted, if typed anything else it calls super().processInput()"""
     if self.acceptValue == "DELETE":
       selectedCheese = self.displayList[super().getSelectedIndex()]
       confirmDelete = YesNoPage(headerLines=cheeseHeader,messages=["You are about to delete", getCheeseSummaryInfo(selectedCheese)])
@@ -144,23 +148,34 @@ class DisplayCheeseListPage (SearchListPage):
       if confirmDelete.acceptValue:
         self.displayList.remove(selectedCheese)
         DAO.delete(selectedCheese.CheeseId)
+    else:
+      super().processInput()
 
 class CheeseInfoPage (YesNoPage):
-  "A page to select a cheese then display it's data"
+  """Displays a cheese's data and prompts if the user wants to modify it"""
   def __init__(self, cheese):
-    "Initializes the SelectDsplayCheesePage"
+    """Initializes the SelectDsplayCheesePage. Paramters are:
+    cheese - The cheese to show the info of"""
     self.cheese = cheese
     self.cheeseDAO = CheeseDAO.instance
     super().__init__(headerLines = cheeseHeader, messages=getLongformCheeseLines(cheese), acceptLine="Modify this cheese? (Y\\N)")
 
   def processInput(self):
+    """Performs super().processInput(), then if the user said yes draws the EditCheesePage for the cheese supplied in the constructor"""
     super().processInput()
     if self.acceptValue == True:
       EditCheesePage(self.cheese).draw()
 
 class EditCheesePage(EditorPage):
+  """A page for editing the content of a cheese"""
   def __init__(self, cheese):
+    """Initializes a new EditCheesePage. Parameters are:
+    cheese - The cheese to edit"""
     self.cheese = cheese
+    #This dict has an entry for every attribute of the cheese
+    #The float fields verify that the input string is a float
+    #The date field verifies that the input string matchs YYYY-MM-DD
+    #The remaining string fields only check length, to make sure the fields fit in the DB
     verifyValuesDict = {
       "CheeseId": lambda a: False,
       "CheeseNameEN": lambda a: a.__len__() <= 100,
@@ -192,95 +207,59 @@ class EditCheesePage(EditorPage):
       "RindTypeFR": lambda a: a.__len__() <= 20,
       "LastUpdateDate": lambda a: re.match("^\\d{4}-\\d{2}-\\d{2}$", a) != None
     }
+    #This dict formats the strings into whatever should be stored in the fields
+    #Only contains 3 entries since these 3 fields are the only 3 non string fields
+    # aside from CheeseId, which the previous dict marks as all edits invalid, since ID is assigned
+    # by either the DB or when it is read from a file, NOT by the user
     formatDict = {
+      "FatContentPercent": lambda a: float(a),
+      "MoisturePercent": lambda a: float(a),
       "LastUpdateDate": lambda a: datetime.datetime.strptime(a,"%Y-%m-%d").date()
     }
     super().__init__(editingObject=cheese,headerLines=cheeseHeader, testValidDict=verifyValuesDict, formatDict=formatDict)
 
   def quit(self):
+    """Overiding LoopingPage.quit(). We want to prompt the user if they want to save their changes, meaning push them to the DB"""
     super().quit()
     saveCheesePage = YesNoPage(headerLines=cheeseHeader, acceptLine="Would you like to save your changes? (Y/N)")
     saveCheesePage.draw()
     if saveCheesePage.acceptValue:
+      #A CheeseId of None means the data wasn't read from DB, and must be inserted
       if self.cheese.CheeseId == None:
         DAO.insert(self.cheese)
       else:
         DAO.update(self.cheese)
 
 
-class FindCheesePage(EditorPage):
+class FindCheesePage(InputPage):
+  """An inplementation of InputPage that finds a Cheese by it's ID and displays it's info"""
   def __init__(self):
-    self.inputLine = ""
-    LoopingPage.__init__(self, headerLines = cheeseHeader, acceptLine = "Enter the ID of the Cheese to be viewed and hit enter, or press escape to exit")
+    """Initializes a new FindCheesePage"""
+    super().__init__(inputName="CheeseId", enterAction=self.findCheese, headerLines = cheeseHeader, acceptLine = "Enter the ID of the Cheese to be viewed and hit enter, or press escape to exit")
   
-  def populateLines(self):
-    super().populateLines
-    self.mainLines = ["ID:" + self.inputLine]
-
-  def processInput(self):
-    if self.acceptValue.isdigit():
-      self.inputLine += self.acceptValue
-    elif (self.acceptValue == "ENTER") and (self.inputLine != ""):
-      cheese = DAO.get(int(self.inputLine))
-      if cheese != None:
-        CheeseInfoPage(cheese).draw()
-        self.quit()
-      else:
-        self.informLine = "Failed to find cheese with that ID"
-    elif self.acceptValue == "ESCAPE":
-      self.quit()
-    elif self.acceptValue == "BACKSPACE":
-      if self.inputLine != "":
-        self.inputLine = self.inputLine[:-1]
+  def findCheese(self, id):
+    """Finds a cheese by it's ID and draws a CheeseInfoPage for it. If the ID was bad the cheese, the user is informed"""
+    cheese = DAO.get(id)
+    if cheese is not None:
+      CheeseInfoPage(cheese).draw()
     else:
-      self.informLine = "Please enter an integer ID"
+      self.informLine = "Invalid ID"
+      self.quitFlag = False
 
-
-class RemoveCheesePage(LoopingPage):
-  "A page to remove a cheese from the DB"
+class RemoveCheesePage(InputPage):
+  """An inplementation of InputPage that finds a Cheese by it's ID and remove it from the DB"""
   def __init__(self):
-    "Initializes the RemoveCheesePage"
-    self.inputLine = ""
-    LoopingPage.__init__(self, headerLines = cheeseHeader, acceptLine = "Enter the ID of the Cheese to remove and hit enter, or press escape to exit")
-  
-  def populateLines(self):
-    super().populateLines
-    self.mainLines = ["ID:" + self.inputLine]
+    """Initializes the RemoveCheesePage"""
+    super().__init__(inputName="CheeseId", enterAction=self.deleteCheese, headerLines = cheeseHeader, acceptLine = "Enter the ID of the Cheese to remove and hit enter, or press escape to exit")
 
-  def processInput(self):
-    "Triggers removal from the DB is a correct ID is supplied to informs the user of failure"
-    if self.acceptValue.isdigit():
-      self.inputLine += self.acceptValue
-    elif (self.acceptValue == "ENTER") and (self.inputLine != ""):
-      if DAO.delete(int(self.inputLine)):
-        self.quit()
-      else:
-        self.informLine = "Failed to remove cheese with that ID"
-    elif self.acceptValue == "ESCAPE":
-      self.quit()
-    elif self.acceptValue == "BACKSPACE":
-      if self.inputLine != "":
-        self.inputLine = self.inputLine[:-1]
-    else:
-      self.informLine = "Please enter an integer ID"
+  def deleteCheese(self, id):
+    """Finds a cheese by it's ID and removes it. If the ID was bad, the user is informed"""
+    if not DAO.delete(id):
+      self.informLine = "Invalid ID"
+      self.quitFlag = False
 
-class SaveDataToFilePage(LoopingPage):
+class SaveDataToFilePage(InputPage):
+  """An inplementation of InputPage that accepts a filename and creates a csv file called the filename containing all cheeses in the DB"""
   def __init__(self):
-    self.inputLine = ""
-    LoopingPage.__init__(self, headerLines = cheeseHeader, acceptLine = "Enter the name for the file and hit enter, or press escape to exit")
-  
-  def populateLines(self):
-    super().populateLines
-    self.mainLines = ["Filename:" + self.inputLine]
-
-  def processInput(self):
-    if (self.acceptValue == "ENTER") and (self.inputLine != ""):
-      dataLoader.saveCheeseData(self.inputLine)
-      self.quit()
-    elif self.acceptValue == "ESCAPE":
-      self.quit()
-    elif self.acceptValue == "BACKSPACE":
-      if self.inputLine != "":
-        self.inputLine = self.inputLine[:-1]
-    else:
-      self.inputLine += self.acceptValue
+    """Initializes a new SaveDataToFilePage"""
+    super().__init__(inputName="Filename", enterAction=lambda a: dataLoader.saveCheeseData(a), headerLines = cheeseHeader, acceptLine = "Enter the name for the file and hit enter, or press escape to exit")

@@ -1,7 +1,16 @@
+'''
+Author: Nicholas Bright
+Created Date: 2019-10-06
+Last Updated: 2019-12-03
+Version: 1.0.0
+Purpose:
+A model class used to store cheese data for transport between lists, databases, and files.
+'''
+
 class CheeseModel:
-  "A class to hold the cheese data"
+  """A class to hold cheese data"""
   def __init__(self, CheeseId=None):
-    "Create a new Cheese object"
+    """Create a new Cheese object"""
     self.CheeseId = CheeseId
     self.CheeseNameEN = None
     self.CheeseNameFR = None
@@ -34,7 +43,7 @@ class CheeseModel:
     self.LastUpdateDate = None
   
   def __str__(self):
-    "Convert a Cheese object to a string"
+    """Convert a Cheese object to a string"""
     cheeseStr = cheeseStr = ""
     cheeseStr = cheeseStr.__add__(str(self.CheeseId))
     cheeseStr = cheeseStr.__add__(", ")
@@ -74,7 +83,7 @@ class CheeseModel:
     return cheeseStr
   
   def __eq__(self, other):
-    "Checks equality of two cheeses"
+    """Checks equality of two cheeses"""
     if (other != None) & (isinstance(other, CheeseModel)):
       return self.CheeseId == other.CheeseId
     return False
