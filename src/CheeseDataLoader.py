@@ -1,3 +1,11 @@
+'''
+Author: Nicholas Bright
+Created Date: 2019-10-20
+Last Updated: 2019-12-03
+Version: 1.0.0
+Purpose:
+Defines a class used to load cheese data from CSV files, and save cheese data to CSV files
+'''
 from CheeseModel import CheeseModel
 from CheeseDAO import CheeseDAO
 import csv
@@ -7,22 +15,23 @@ import os
 import sys
 
 class CheeseDataLoader:
-  "Object that loads cheese data from a file and sends them to the DB"
+  """Object that loads cheese data from a file and sends them to the DB"""
   
   _resourceFolder = "resources/"
   _dataFolder = _resourceFolder + "dataFiles/"
 
   def __init__(self, filename = None, linesToRead = -1):
-    "Creates a new CheeseDataLoader and if a filename is supplied begins reading that file into the DB"
+    """Creates a new CheeseDataLoader and if a filename is supplied begins reading that file into the DB"""
     self.cheeseDAO = CheeseDAO.instance
     if(filename != None):
       self.readCheeseFile(filename, linesToRead)
   
   def getListOfDataFiles(self):
+    """Returns a list of the names of all files in the folder for csv files"""
     return os.listdir(CheeseDataLoader._dataFolder)
   
   def readCheeseFile(self, filename, linesToRead = -1):
-    "Read Cheese data from a file. It will read the number of lines specified, the default value reads all lines."
+    """Read Cheese data from a file. It will read the number of lines specified, the default value reads all lines."""
     with open(CheeseDataLoader._dataFolder + filename, mode="r", encoding="utf-8-sig") as cheeseFile:
       dataReader = csv.reader(cheeseFile, delimiter=',', quotechar='"')
       recordsRead = 0
@@ -37,6 +46,7 @@ class CheeseDataLoader:
       self.cheeseDAO.insertAll()
 
   def convertRowToCheese (self, row):
+    """Converts a row from the CSV files into a cheese model"""
     newCheese = CheeseModel(row[0])
     newCheese.CheeseNameEN = row[1] if row[1] != "" else None
     newCheese.CheeseNameFR = row[2] if row[2] != "" else None
@@ -73,7 +83,7 @@ class CheeseDataLoader:
     return newCheese
 
   def saveCheeseData(self, filename):
-    "Saves the cheeses in the DB to a file with the name passed to the method"
+    """Saves the cheeses in the DB to a file with the name passed to the method"""
     saveToFile = open( CheeseDataLoader._dataFolder + filename + ".csv", "w", encoding = "utf8")
     keyList = list(CheeseModel().__dict__.keys())
     for header in keyList:
@@ -84,66 +94,74 @@ class CheeseDataLoader:
     saveToFile.close()
 
   def __generateCheeseCSVLine__(self, cheese ) -> "":
-    "Turns a cheese into a csv value string"
+    """Turns a cheese into a csv value string"""
     cheeseStr = ""
     separator = ","
-    cheeseStr += "" if cheese.CheeseId == None else "\"{0}\"".format(str(cheese.CheeseId).replace("\"","\"\""))
+    cheeseStr += "" if cheese.CheeseId == None else self.formatCSVValue(cheese.CheeseId)
     cheeseStr += separator
-    cheeseStr += "" if cheese.CheeseNameEN == None else "\"{0}\"".format(str(cheese.CheeseNameEN).replace("\"","\"\""))
+    cheeseStr += "" if cheese.CheeseNameEN == None else self.formatCSVValue(cheese.CheeseNameEN)
     cheeseStr += separator
-    cheeseStr += "" if cheese.CheeseNameFR == None else "\"{0}\"".format(str(cheese.CheeseNameFR).replace("\"","\"\""))
+    cheeseStr += "" if cheese.CheeseNameFR == None else self.formatCSVValue(cheese.CheeseNameFR)
     cheeseStr += separator
-    cheeseStr += "" if cheese.ManufacturerNameEN == None else "\"{0}\"".format(str(cheese.ManufacturerNameEN).replace("\"","\"\""))
+    cheeseStr += "" if cheese.ManufacturerNameEN == None else self.formatCSVValue(cheese.ManufacturerNameEN)
     cheeseStr += separator
-    cheeseStr += "" if cheese.ManufacturerNameFR == None else "\"{0}\"".format(str(cheese.ManufacturerNameFR).replace("\"","\"\""))
+    cheeseStr += "" if cheese.ManufacturerNameFR == None else self.formatCSVValue(cheese.ManufacturerNameFR)
     cheeseStr += separator
-    cheeseStr += "" if cheese.ManufacturerProvCode == None else "\"{0}\"".format(str(cheese.ManufacturerProvCode).replace("\"","\"\""))
+    cheeseStr += "" if cheese.ManufacturerProvCode == None else self.formatCSVValue(cheese.ManufacturerProvCode)
     cheeseStr += separator
-    cheeseStr += "" if cheese.ManufacturingTypeEN == None else "\"{0}\"".format(str(cheese.ManufacturingTypeEN).replace("\"","\"\""))
+    cheeseStr += "" if cheese.ManufacturingTypeEN == None else self.formatCSVValue(cheese.ManufacturingTypeEN)
     cheeseStr += separator
-    cheeseStr += "" if cheese.ManufacturingTypeFR == None else "\"{0}\"".format(str(cheese.ManufacturingTypeFR).replace("\"","\"\""))
+    cheeseStr += "" if cheese.ManufacturingTypeFR == None else self.formatCSVValue(cheese.ManufacturingTypeFR)
     cheeseStr += separator
-    cheeseStr += "" if cheese.WebSiteEN == None else "\"{0}\"".format(str(cheese.WebSiteEN).replace("\"","\"\""))
+    cheeseStr += "" if cheese.WebSiteEN == None else self.formatCSVValue(cheese.WebSiteEN)
     cheeseStr += separator
-    cheeseStr += "" if cheese.WebSiteFR == None else "\"{0}\"".format(str(cheese.WebSiteFR).replace("\"","\"\""))
+    cheeseStr += "" if cheese.WebSiteFR == None else self.formatCSVValue(cheese.WebSiteFR)
     cheeseStr += separator
-    cheeseStr += "" if cheese.FatContentPercent == None else "\"{0}\"".format(str(cheese.FatContentPercent).replace("\"","\"\""))
+    cheeseStr += "" if cheese.FatContentPercent == None else self.formatCSVValue(cheese.FatContentPercent)
     cheeseStr += separator
-    cheeseStr += "" if cheese.MoisturePercent == None else "\"{0}\"".format(str(cheese.MoisturePercent).replace("\"","\"\""))
+    cheeseStr += "" if cheese.MoisturePercent == None else self.formatCSVValue(cheese.MoisturePercent)
     cheeseStr += separator
-    cheeseStr += "" if cheese.ParticularitiesEN == None else "\"{0}\"".format(str(cheese.ParticularitiesEN).replace("\"","\"\""))
+    cheeseStr += "" if cheese.ParticularitiesEN == None else self.formatCSVValue(cheese.ParticularitiesEN)
     cheeseStr += separator
-    cheeseStr += "" if cheese.ParticularitiesFR == None else "\"{0}\"".format(str(cheese.ParticularitiesFR).replace("\"","\"\""))
+    cheeseStr += "" if cheese.ParticularitiesFR == None else self.formatCSVValue(cheese.ParticularitiesFR)
     cheeseStr += separator
-    cheeseStr += "" if cheese.FlavourEN == None else "\"{0}\"".format(str(cheese.FlavourEN).replace("\"","\"\""))
+    cheeseStr += "" if cheese.FlavourEN == None else self.formatCSVValue(cheese.FlavourEN)
     cheeseStr += separator
-    cheeseStr += "" if cheese.FlavourFR == None else "\"{0}\"".format(str(cheese.FlavourFR).replace("\"","\"\""))
+    cheeseStr += "" if cheese.FlavourFR == None else self.formatCSVValue(cheese.FlavourFR)
     cheeseStr += separator
-    cheeseStr += "" if cheese.CharacteristicsEN == None else "\"{0}\"".format(str(cheese.CharacteristicsEN).replace("\"","\"\""))
+    cheeseStr += "" if cheese.CharacteristicsEN == None else self.formatCSVValue(cheese.CharacteristicsEN)
     cheeseStr += separator
-    cheeseStr += "" if cheese.CharacteristicsFR == None else "\"{0}\"".format(str(cheese.CharacteristicsFR).replace("\"","\"\""))
+    cheeseStr += "" if cheese.CharacteristicsFR == None else self.formatCSVValue(cheese.CharacteristicsFR)
     cheeseStr += separator
-    cheeseStr += "" if cheese.RipeningEN == None else "\"{0}\"".format(str(cheese.RipeningEN).replace("\"","\"\""))
+    cheeseStr += "" if cheese.RipeningEN == None else self.formatCSVValue(cheese.RipeningEN)
     cheeseStr += separator
-    cheeseStr += "" if cheese.RipeningFR == None else "\"{0}\"".format(str(cheese.RipeningFR).replace("\"","\"\""))
+    cheeseStr += "" if cheese.RipeningFR == None else self.formatCSVValue(cheese.RipeningFR)
     cheeseStr += separator
-    cheeseStr += "" if cheese.Organic == None else "\"{0}\"".format(str(cheese.Organic).replace("\"","\"\""))
+    cheeseStr += "" if cheese.Organic == None else self.formatCSVValue(cheese.Organic)
     cheeseStr += separator
-    cheeseStr += "" if cheese.CategoryTypeEN == None else "\"{0}\"".format(str(cheese.CategoryTypeEN).replace("\"","\"\""))
+    cheeseStr += "" if cheese.CategoryTypeEN == None else self.formatCSVValue(cheese.CategoryTypeEN)
     cheeseStr += separator
-    cheeseStr += "" if cheese.CategoryTypeFR == None else "\"{0}\"".format(str(cheese.CategoryTypeFR).replace("\"","\"\""))
+    cheeseStr += "" if cheese.CategoryTypeFR == None else self.formatCSVValue(cheese.CategoryTypeFR)
     cheeseStr += separator
-    cheeseStr += "" if cheese.MilkTypeEN == None else "\"{0}\"".format(str(cheese.MilkTypeEN).replace("\"","\"\""))
+    cheeseStr += "" if cheese.MilkTypeEN == None else self.formatCSVValue(cheese.MilkTypeEN)
     cheeseStr += separator
-    cheeseStr += "" if cheese.MilkTypeFR == None else "\"{0}\"".format(str(cheese.MilkTypeFR).replace("\"","\"\""))
+    cheeseStr += "" if cheese.MilkTypeFR == None else self.formatCSVValue(cheese.MilkTypeFR)
     cheeseStr += separator
-    cheeseStr += "" if cheese.MilkTreatmentTypeEN == None else "\"{0}\"".format(str(cheese.MilkTreatmentTypeEN).replace("\"","\"\""))
+    cheeseStr += "" if cheese.MilkTreatmentTypeEN == None else self.formatCSVValue(cheese.MilkTreatmentTypeEN)
     cheeseStr += separator
-    cheeseStr += "" if cheese.MilkTreatmentTypeFR == None else "\"{0}\"".format(str(cheese.MilkTreatmentTypeFR).replace("\"","\"\""))
+    cheeseStr += "" if cheese.MilkTreatmentTypeFR == None else self.formatCSVValue(cheese.MilkTreatmentTypeFR)
     cheeseStr += separator
-    cheeseStr += "" if cheese.RindTypeEN == None else "\"{0}\"".format(str(cheese.RindTypeEN).replace("\"","\"\""))
+    cheeseStr += "" if cheese.RindTypeEN == None else self.formatCSVValue(cheese.RindTypeEN)
     cheeseStr += separator
-    cheeseStr += "" if cheese.RindTypeFR == None else "\"{0}\"".format(str(cheese.RindTypeFR).replace("\"","\"\""))
+    cheeseStr += "" if cheese.RindTypeFR == None else self.formatCSVValue(cheese.RindTypeFR)
     cheeseStr += separator
-    cheeseStr += "" if cheese.LastUpdateDate == None else "\"{0}\"".format(str(cheese.LastUpdateDate).replace("\"","\"\""))
+    cheeseStr += "" if cheese.LastUpdateDate == None else self.formatCSVValue(cheese.LastUpdateDate)
     return cheeseStr.replace("\n","")
+
+  def formatCSVValue(self, value):
+    """Turns double quotes into double double quotes and value contains a comma, it surrounds value with double quotes"""
+    value = str(value)
+    value = value.replace("\"","\"\"")
+    if value.__contains__(","):
+      value = "\"{0}\"".format(value)
+    return value
