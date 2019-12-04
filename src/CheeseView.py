@@ -25,7 +25,8 @@ DAO = CheeseDAO.instance
 dataLoader = CheeseDataLoader()
 
 def getCheeseSummaryInfo(cheese):
-  """Creates a string summarizing the info the the passed cheese"""
+  """Creates a string summarizing the info the the passed cheese
+  cheese - The cheese to summarize"""
   return (str(cheese.CheeseId) + ": " + 
     ("Unknown" if cheese.CheeseNameEN == None else cheese.CheeseNameEN) 
     + " made by " + 
@@ -36,7 +37,8 @@ def getCheeseSummaryInfo(cheese):
     ("Unknown" if cheese.ManufacturingTypeEN == None else cheese.ManufacturingTypeEN))
   
 def getLongformCheeseLines(cheese):
-  """Creates an array of strings based on the passed cheese containing all cheese info"""
+  """Creates an array of strings based on the passed cheese containing all cheese info
+  cheese - The cheese to create the strings about"""
   lines = []
   lines.append(getCheeseSummaryInfo(cheese))
   lines.append("WebSite: " + ("Unknown" if cheese.WebSiteEN == None else cheese.WebSiteEN))
@@ -57,7 +59,7 @@ def getLongformCheeseLines(cheese):
 class MainMenu (Menu):
   """A main menu of the cheese program"""
   def __init__(self):
-    """Initiates the main menu with options for the program"""
+    """Initiates a new MainMenu"""
     optionDict = {
       "Data Options":self.DataOptions,
       "Display records":self.displayRecords,
@@ -117,14 +119,15 @@ class ReloadDatasetPage(ListPage):
     """Initializes the ReloadDatasetPage"""
     super().__init__(displayList=dataLoader.getListOfDataFiles(), headerLines=cheeseHeader, selectAction=self.loadDataset)
   
-  def loadDataset(self, item):
-    """Asks the user if they want to clear the table first, and then executes the delete (if they said yes) and loads data from the file"""
+  def loadDataset(self, filename):
+    """Asks the user if they want to clear the table first, and then executes the delete (if they said yes) and loads data from the file
+    filename - The filename to load from"""
     clearPage = YesNoPage(["Do you wish to delete all cheeses in the db before loading?"])
     clearPage.draw()
     if clearPage.acceptValue:
       DAO.deleteAll()
     try:
-      dataLoader.readCheeseFile(item)
+      dataLoader.readCheeseFile(filename)
       self.quit()
     except IntegrityError as e:
       self.informLine = e.msg
@@ -136,7 +139,8 @@ class DisplayCheeseListPage (SearchListPage):
     super().__init__(searchList=DAO.getAll(), headerLines = cheeseHeader, formatter=getCheeseSummaryInfo, selectAction=self.displaySummaryOfCheese)
 
   def displaySummaryOfCheese(self, cheese):
-    """Draws a cheese info page for a given cheese"""
+    """Draws a cheese info page for a given cheese
+    cheese - The cheese to show info of"""
     CheeseInfoPage(cheese).draw()
   
   def processInput(self):
@@ -169,7 +173,7 @@ class CheeseInfoPage (YesNoPage):
 class EditCheesePage(EditorPage):
   """A page for editing the content of a cheese"""
   def __init__(self, cheese):
-    """Initializes a new EditCheesePage. Parameters are:
+    """Initializes a new EditCheesePage.
     cheese - The cheese to edit"""
     self.cheese = cheese
     #This dict has an entry for every attribute of the cheese
@@ -238,7 +242,8 @@ class FindCheesePage(InputPage):
     super().__init__(inputName="CheeseId", enterAction=self.findCheese, headerLines = cheeseHeader, acceptLine = "Enter the ID of the Cheese to be viewed and hit enter, or press escape to exit")
   
   def findCheese(self, id):
-    """Finds a cheese by it's ID and draws a CheeseInfoPage for it. If the ID was bad the cheese, the user is informed"""
+    """Finds a cheese by it's ID and draws a CheeseInfoPage for it. If the ID was bad the cheese, the user is informed
+    id - The id of the cheese to find"""
     cheese = DAO.get(id)
     if cheese is not None:
       CheeseInfoPage(cheese).draw()
@@ -253,7 +258,8 @@ class RemoveCheesePage(InputPage):
     super().__init__(inputName="CheeseId", enterAction=self.deleteCheese, headerLines = cheeseHeader, acceptLine = "Enter the ID of the Cheese to remove and hit enter, or press escape to exit")
 
   def deleteCheese(self, id):
-    """Finds a cheese by it's ID and removes it. If the ID was bad, the user is informed"""
+    """Finds a cheese by it's ID and removes it. If the ID was bad, the user is informed
+    id - The id of the cheese to be removed"""
     if not DAO.delete(id):
       self.informLine = "Invalid ID"
       self.quitFlag = False

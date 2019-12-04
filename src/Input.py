@@ -58,7 +58,8 @@ def getChar():
   return getch()
 
 def convertByteInput(byteValue):
-  """Converts byte input into a string"""
+  """Converts byte input into a string
+  byteValue - The byte value of the character to be converted"""
   try:
     string = byteStringDict[byteValue]
     if string == "SPECIAL":

@@ -9,38 +9,68 @@ A model class used to store cheese data for transport between lists, databases, 
 
 class CheeseModel:
   """A class to hold cheese data"""
-  def __init__(self, CheeseId=None):
-    """Create a new Cheese object"""
+  def __init__(self,
+    CheeseId = None,
+    CheeseNameEN = None,
+    CheeseNameFR = None,
+    ManufacturerNameEN = None,
+    ManufacturerNameFR = None,
+    ManufacturerProvCode = None,
+    ManufacturingTypeEN = None,
+    ManufacturingTypeFR = None,
+    WebSiteEN = None,
+    WebSiteFR = None,
+    FatContentPercent = None,
+    MoisturePercent = None,
+    ParticularitiesEN = None,
+    ParticularitiesFR = None,
+    FlavourEN = None,
+    FlavourFR = None,
+    CharacteristicsEN = None,
+    CharacteristicsFR = None,
+    RipeningEN = None,
+    RipeningFR = None,
+    Organic = False,
+    CategoryTypeEN = None,
+    CategoryTypeFR = None,
+    MilkTypeEN = None,
+    MilkTypeFR = None,
+    MilkTreatmentTypeEN = None,
+    MilkTreatmentTypeFR = None,
+    RindTypeEN = None,
+    RindTypeFR = None,
+    LastUpdateDate = None):
+    """Initializes a new CheeseModel"""
     self.CheeseId = CheeseId
-    self.CheeseNameEN = None
-    self.CheeseNameFR = None
-    self.ManufacturerNameEN = None
-    self.ManufacturerNameFR = None
-    self.ManufacturerProvCode = None
-    self.ManufacturingTypeEN = None
-    self.ManufacturingTypeFR = None
-    self.WebSiteEN = None
-    self.WebSiteFR = None
-    self.FatContentPercent = None
-    self.MoisturePercent = None
-    self.ParticularitiesEN = None
-    self.ParticularitiesFR = None
-    self.FlavourEN = None
-    self.FlavourFR = None
-    self.CharacteristicsEN = None
-    self.CharacteristicsFR = None
-    self.RipeningEN = None
-    self.RipeningFR = None
-    self.Organic = False
-    self.CategoryTypeEN = None
-    self.CategoryTypeFR = None
-    self.MilkTypeEN = None
-    self.MilkTypeFR = None
-    self.MilkTreatmentTypeEN = None
-    self.MilkTreatmentTypeFR = None
-    self.RindTypeEN = None
-    self.RindTypeFR = None
-    self.LastUpdateDate = None
+    self.CheeseNameEN = CheeseNameEN
+    self.CheeseNameFR = CheeseNameFR
+    self.ManufacturerNameEN = ManufacturerNameEN
+    self.ManufacturerNameFR = ManufacturerNameFR
+    self.ManufacturerProvCode = ManufacturerProvCode
+    self.ManufacturingTypeEN = ManufacturingTypeEN
+    self.ManufacturingTypeFR = ManufacturingTypeFR
+    self.WebSiteEN = WebSiteEN
+    self.WebSiteFR = WebSiteFR
+    self.FatContentPercent = FatContentPercent
+    self.MoisturePercent = MoisturePercent
+    self.ParticularitiesEN = ParticularitiesEN
+    self.ParticularitiesFR = ParticularitiesFR
+    self.FlavourEN = FlavourEN
+    self.FlavourFR = FlavourFR
+    self.CharacteristicsEN = CharacteristicsEN
+    self.CharacteristicsFR = CharacteristicsFR
+    self.RipeningEN = RipeningEN
+    self.RipeningFR = RipeningFR
+    self.Organic = Organic
+    self.CategoryTypeEN = CategoryTypeEN
+    self.CategoryTypeFR = CategoryTypeFR
+    self.MilkTypeEN = MilkTypeEN
+    self.MilkTypeFR = MilkTypeFR
+    self.MilkTreatmentTypeEN = MilkTreatmentTypeEN
+    self.MilkTreatmentTypeFR = MilkTreatmentTypeFR
+    self.RindTypeEN = RindTypeEN
+    self.RindTypeFR = RindTypeFR
+    self.LastUpdateDate = LastUpdateDate
   
   def __str__(self):
     """Convert a Cheese object to a string"""

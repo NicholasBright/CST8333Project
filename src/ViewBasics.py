@@ -314,7 +314,8 @@ class EditorPage(ListPage):
     return list(self.attributeNameDict.keys())
   
   def formatLine(self, key):
-    """Formats each line. This is used so that when editing the property being edited is marked with an underscore"""
+    """Formats each line. This is used so that when editing the property being edited is marked with an underscore
+    key - The name of the field being edited"""
     if not self.editingFlag:
       return str(key) + ":" + str(self.editingObject.__getattribute__(key))
     if self.displayList[(self.editingItem+((self.currentPage-1)*self.itemsPerPage))] == key:
@@ -367,7 +368,9 @@ class EditorPage(ListPage):
         self.editLine += self.acceptValue
   
   def testValidity(self, key, value):
-    """Makes sure that the format is valid by executing the lamda found in testValidDict[key]."""
+    """Makes sure that the format is valid by executing the lamda found in testValidDict[key].
+    key - The key of the attribute
+    value - The value to be tested"""
     if self.testValidDict == None:
       return True
     if key in self.testValidDict:
@@ -391,6 +394,7 @@ class SearchListPage(ListPage):
     self.searchList = searchList.copy()
     self.selectedItem = -1
     self.searchLine = ""
+    #We save the accept lines of the ListPage and SearchListPage so we can switch between them
     self.listAcceptLine = self.acceptLine
     self.searchAcceptLine = acceptLine
     self.acceptLine = acceptLine
@@ -402,7 +406,7 @@ class SearchListPage(ListPage):
     self.footerLines.append("Search format: [AttributeName]:[Value]")
     self.footerLines.append("Multiple terms can be specified, separate then by spaces")
     self.footerLines.append("Use double quotes if [Value] contains spaces")
-    self.footerLines.append("Search: " + self.searchLine)
+    self.footerLines.append("Search: " + self.searchLine + "_")
 
   def processInput(self):
     """If we are entering search terms, processess input. Otherwise called ListPage.processInput()
@@ -455,7 +459,7 @@ class SearchListPage(ListPage):
           self.informLine += "Search term \""+key+"\" is not valid. "
       else:
         self.informLine += "Invalid Search Format"
-    foundList = []
+    self.displayList = []
     for item in self.searchList:
       valid = True
       for term in attrValueList:
@@ -463,8 +467,7 @@ class SearchListPage(ListPage):
           valid = False
           break
       if valid:
-        foundList.append(item)
-    self.displayList = foundList
+        self.displayList.append(item)
   
   def parseSearchList(self):
     """Parses the search terms into a list of strings with format [attrKey]:[attrValue]"""

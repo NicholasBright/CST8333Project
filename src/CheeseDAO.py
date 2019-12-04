@@ -99,7 +99,7 @@ rind_type_en = %s, rind_type_fr = %s, last_update_date = %s \
 WHERE cheese_id = %s"
 
   def __init__(self):
-    """Establishs a connection to the DB"""
+    """Initializes a new CheeseDAO"""
     self.toInsert = []
     self.DB = mysql.connector.connect(**CheeseDAO._connectionData)
 
@@ -143,7 +143,8 @@ WHERE cheese_id = %s"
     return cheeseList
 
   def update(self, cheese):
-    """Updates a cheese in the DB"""
+    """Updates a cheese in the DB
+    cheese - The cheese to update in the DB"""
     #_getListOfFields has CheeseID at the start since it was built for 
     # insert cheese not update.
     #To remedy this I get the sublist of fields from the 2nd item to the end
@@ -156,7 +157,8 @@ WHERE cheese_id = %s"
     cursor.close()
   
   def delete(self, id):
-    """Deletes a cheese from the DB"""
+    """Deletes a cheese from the DB
+    id - The id of the cheese to be deleted"""
     cursor = self.DB.cursor()
     cursor.execute(CheeseDAO._deleteStatement, (id,))
     self.DB.commit()
@@ -172,7 +174,8 @@ WHERE cheese_id = %s"
     cursor.close()
 
   def _rowIntoCheese(self, row):
-    """Turns a row from the DB into a cheese"""
+    """Turns a row from the DB into a cheese
+    row - A tuple representing a single row returned by the DB"""
     cheese = CheeseModel(row[0])
     cheese.CheeseNameEN = row[1]
     cheese.CheeseNameFR = row[2]
@@ -206,7 +209,8 @@ WHERE cheese_id = %s"
     return cheese
 
   def _getListOfFields(self, cheese):
-    """Turns a cheese into a list of it's values"""
+    """Turns a cheese into a list of it's values
+    cheese - A cheese to fill the list with values from"""
     return [
       cheese.CheeseId,
       cheese.CheeseNameEN,

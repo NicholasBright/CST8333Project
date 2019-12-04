@@ -20,18 +20,18 @@ class CheeseDataLoader:
   _resourceFolder = "resources/"
   _dataFolder = _resourceFolder + "dataFiles/"
 
-  def __init__(self, filename = None, linesToRead = -1):
-    """Creates a new CheeseDataLoader and if a filename is supplied begins reading that file into the DB"""
+  def __init__(self):
+    """Initializes a new CheeseDataLoader"""
     self.cheeseDAO = CheeseDAO.instance
-    if(filename != None):
-      self.readCheeseFile(filename, linesToRead)
   
   def getListOfDataFiles(self):
     """Returns a list of the names of all files in the folder for csv files"""
     return os.listdir(CheeseDataLoader._dataFolder)
   
   def readCheeseFile(self, filename, linesToRead = -1):
-    """Read Cheese data from a file. It will read the number of lines specified, the default value reads all lines."""
+    """Read Cheese data from a file and push it to the DB.
+    filename - The name of the file to read from
+    linesToRead - The number of lines to read. -1 means all of them"""
     with open(CheeseDataLoader._dataFolder + filename, mode="r", encoding="utf-8-sig") as cheeseFile:
       dataReader = csv.reader(cheeseFile, delimiter=',', quotechar='"')
       recordsRead = 0
@@ -46,7 +46,8 @@ class CheeseDataLoader:
       self.cheeseDAO.insertAll()
 
   def convertRowToCheese (self, row):
-    """Converts a row from the CSV files into a cheese model"""
+    """Converts a row from the CSV files into a cheese model
+    row - A row if data read from a cheese csv file"""
     newCheese = CheeseModel(row[0])
     newCheese.CheeseNameEN = row[1] if row[1] != "" else None
     newCheese.CheeseNameFR = row[2] if row[2] != "" else None
@@ -83,8 +84,11 @@ class CheeseDataLoader:
     return newCheese
 
   def saveCheeseData(self, filename):
-    """Saves the cheeses in the DB to a file with the name passed to the method"""
+    """Saves the cheeses in the DB to a file with the name passed to the method
+    filename - The name of the file to save to"""
     saveToFile = open( CheeseDataLoader._dataFolder + filename + ".csv", "w", encoding = "utf8")
+    #Using a new CheeseModel, we write the headers by getting the names 
+    # of all cheese properties from the __dict__
     keyList = list(CheeseModel().__dict__.keys())
     for header in keyList:
       saveToFile.write(header + ("," if keyList[-1:][0] != header else ""))
@@ -93,8 +97,9 @@ class CheeseDataLoader:
       saveToFile.write(self.__generateCheeseCSVLine__(cheese) + "\n")
     saveToFile.close()
 
-  def __generateCheeseCSVLine__(self, cheese ) -> "":
-    """Turns a cheese into a csv value string"""
+  def __generateCheeseCSVLine__(self, cheese ):
+    """Turns a cheese into a csv string.
+    cheese - The cheese to turn into a csv string"""
     cheeseStr = ""
     separator = ","
     cheeseStr += "" if cheese.CheeseId == None else self.formatCSVValue(cheese.CheeseId)
@@ -159,7 +164,8 @@ class CheeseDataLoader:
     return cheeseStr.replace("\n","")
 
   def formatCSVValue(self, value):
-    """Turns double quotes into double double quotes and value contains a comma, it surrounds value with double quotes"""
+    """Turns double quotes into double double quotes and value contains a comma, it surrounds value with double quotes
+    value - The line that will be formatted for saving to a csv"""
     value = str(value)
     value = value.replace("\"","\"\"")
     if value.__contains__(","):
